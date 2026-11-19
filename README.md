@@ -146,9 +146,9 @@ aesthetics-os/
 ├── scripts/aos.py                        # 系统调用：带状态、会拒绝的审美判断接口（含 measure/critique/loop）
 ├── scripts/measure.py                    # 无参考形式指纹：留白/边缘/色相/重心等 13 项，--compare 判换皮
 ├── scripts/critique.py                   # 质量判据：鉴赏家协议提示/校验/绑定像素，真实视觉执行
-├── scripts/euler_lens.py                 # 欧拉透镜：色相相位和谐/调色板旋转/傅里叶功率谱（e^(iθ) 迁移）
+├── scripts/euler_lens.py                 # 欧拉透镜：色相相位和谐/调色板旋转/功率谱/相位一致性PC/Gabor方向谱（e^(iθ) 迁移）
 ├── scripts/test_aos.py                   # 核心回归测试（35 项断言，重点测拒绝路径与测量/审判判别力）
-├── scripts/test_euler_lens.py            # 欧拉透镜测试（11 项：相位旋转/无彩色/互补/留白混淆）
+├── scripts/test_euler_lens.py            # 欧拉透镜测试（15 项：相位旋转/无彩色/互补/留白混淆/PC边缘/Gabor方向）
 ├── scripts/lint_skill.py                 # 结构自检：四段式 / 路由覆盖 / 坏链 / 引号与换行
 ├── scripts/verify_utf8.py                # 严格 UTF-8 / 无 BOM / 无乱码自检
 └── references/

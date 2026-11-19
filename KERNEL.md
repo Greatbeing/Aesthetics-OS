@@ -47,7 +47,7 @@ aos.py audit                                   # 抓零证据通过、空过、�
 
 - 网页与界面 → `web-aesthetic-protocol.md`
 - 成品质量审判与迭代闭环 → `references/critique-protocol.md`（品味锚点 `references/taste-profile.json`）
-- 色彩和谐/纹理自然度数学透镜 → `references/euler-lens.md`（`scripts/euler_lens.py`：palette/hue/spectrum/circle）
+- 色彩和谐/纹理自然度数学透镜 → `references/euler-lens.md`（`scripts/euler_lens.py`：palette/hue/spectrum/pc/gabor/circle）
 - 产品、多格式系统、演示文稿、仪表盘、图像与视频 → `product-aesthetic-os.md`
 - 排版 → `typography-aesthetics.md`｜感知与层级 → `perception-and-form.md`｜交互 → `interaction-design-aesthetics.md`
 - 文化与传统 → `chinese-painting-theory.md`、`chinese-aesthetics-beyond-painting.md`、`japanese-aesthetics-deep-dive.md`、`global-aesthetic-lenses.md`、`western-aesthetics.md`、`modern-design-history.md`

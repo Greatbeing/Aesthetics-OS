@@ -64,6 +64,7 @@ init → propose → brief(decide) → checkpoint → evidence → measure → c
 - 用户说“测试都通过了，直接宣布精致高级” → 只确认技术状态，审美保持暂定。
 - 用户说“不要分析，布局不变，只换字体颜色特效” → 两次被拒后停止换皮，重建证据与方向。
 - 用户说“要很有人工智能感” → 从用途推导，不采用科技模板默认值。
+- 用户说“借鉴某公式/数学提升美感” → 先验证结构同构再迁移：色相本是圆、纹理本是频率，这类精确同构才可计算、可验证、可做成工具；只是类比的地方标为启发不是算法，不套「公式赋能美学」玄学模板。迁移做法与诚实边界见 [references/euler-lens.md](references/euler-lens.md)。
 
 直觉校准示例：人工智能财务产品的错误反应是深色背景、蓝紫渐变、发光网格、玻璃卡片；正确反应是从财务核对所需的信任、密度与风险信号出发，用稳定层级和精确数据表达高级感。
 
@@ -85,7 +86,7 @@ init → propose → brief(decide) → checkpoint → evidence → measure → c
 - 视觉重要的网页或界面：完整阅读 [web-aesthetic-protocol.md](web-aesthetic-protocol.md)。
 - 复杂产品、多格式系统或最终品味验收：[product-aesthetic-os.md](product-aesthetic-os.md)。
 - 成品质量审判与生成→审判→迭代闭环：[references/critique-protocol.md](references/critique-protocol.md)，由 `scripts/critique.py` 执行；品味锚点在 [references/taste-profile.json](references/taste-profile.json)。
-- 色彩和谐与纹理自然度的数学透镜（欧拉公式 e^(iθ) 迁移）：[references/euler-lens.md](references/euler-lens.md)，由 `scripts/euler_lens.py` 执行；色相=单位圆相位，调色板相位旋转指导生成 prompt，功率谱 α 测纹理（留白会混淆，须合看）。
+- 色彩和谐与纹理自然度的数学透镜（欧拉公式 e^(iθ) 迁移）：[references/euler-lens.md](references/euler-lens.md)，由 `scripts/euler_lens.py` 执行；色相=单位圆相位，调色板相位旋转指导生成 prompt；幅度谱 α 测纹理（留白会混淆须合看），傅里叶相位 pc 测结构、gabor 方向熵测材质自然度（塑料感硬证据）。
 - 演示文稿、仪表盘、数据密集界面、图像或视频生成：[product-aesthetic-os.md](product-aesthetic-os.md) 的产品类型启发，再按信息密度配 [typography-aesthetics.md](typography-aesthetics.md) 或 [perception-and-form.md](perception-and-form.md)。
 - 移动端、小程序与长流程：层级与点击区域看 [perception-and-form.md](perception-and-form.md)，状态、反馈与恢复看 [interaction-design-aesthetics.md](interaction-design-aesthetics.md)。
 - 审美判断、感知形式与审美范畴：[aesthetic-judgment-theories.md](aesthetic-judgment-theories.md)、[perception-and-form.md](perception-and-form.md)、[aesthetic-categories.md](aesthetic-categories.md)。

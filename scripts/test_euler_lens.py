@@ -83,6 +83,23 @@ def main() -> int:
         a_grad = E.spectrum(save(grad, d / "grad.png"))["alpha"]
         check(a_noise < a_grad, f"噪声 α={a_noise:.2f} < 平滑渐变 α={a_grad:.2f}（高频决定斜率）")
 
+        # PC：竖直锐边 → 边缘 PC >> 平坦（光照不变结构检测，欧拉相位相干叠加）
+        edge = np.zeros((128, 128)); edge[:, 64:] = 1.0
+        pcm = E._pc_map(edge)
+        e_pc = pcm[:, 62:66].mean(); f_pc = pcm[:, 15:45].mean()
+        check(e_pc > f_pc * 3, f"PC 边缘={e_pc:.2f} >> 平坦={f_pc:.2f}（结构跟相位走）")
+        check(E._pc_map(rng.random((128, 128))).mean() < 0.3, "纯噪声 PC 低")
+
+        # Gabor：水平光栅 → 方向集中（各向异性高）
+        grat = ((np.sin(2 * np.pi * np.arange(256)[None, :] / 8) * 0.5 + 0.5) * 255).astype(np.uint8)
+        grat = np.tile(grat, (256, 1))
+        go = E.gabor_orientation(save(grat, d / "grat.png"), wavelength=8)
+        check(go["anisotropy"] > 0.5, f"光栅方向集中 各向异性={go['anisotropy']}")
+        # Gabor：噪声方向熵 > 平滑渐变方向熵（塑料渐变方向集中）
+        g_noise = E.gabor_orientation(save(noise, d / "noise.png"))["orient_entropy"]
+        g_grad = E.gabor_orientation(save(grad, d / "grad.png"))["orient_entropy"]
+        check(g_noise > g_grad, f"噪声方向熵={g_noise:.2f} > 渐变={g_grad:.2f}（塑料渐变方向集中）")
+
     failed = [m for ok, m in results if not ok]
     print("\n" + "─" * 52)
     print(f"断言 {len(results) - len(failed)}/{len(results)} 通过")

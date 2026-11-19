@@ -154,6 +154,114 @@ def spectrum(path: Path, size: int = 512) -> dict:
             "curve": [(round(float(c), 2), round(float(m), 3)) for c, m in zip(centers, means)]}
 
 
+def _load_gray(path: Path, size: int) -> np.ndarray:
+    return np.asarray(Image.open(path).convert("L").resize((size, size)), dtype=np.float64) / 255.0
+
+
+def _pc_map(a: np.ndarray, nscale: int = 4, norient: int = 6, min_wl: int = 3,
+            mult: float = 2.1, sigma_f: float = 0.55, spread: float = 1.2,
+            noise_k: float = 3.0) -> np.ndarray:
+    """相位一致性图：各方向 |Σ_s A_s·e^(iφ_s)|（相干 phasor 和）减噪声门限取最大。
+    特征处各尺度相位对齐→相长→大；平坦/噪声→相消→0。光照不变。欧拉相位相干叠加。"""
+    rows, cols = a.shape
+    u = (np.arange(cols) - cols // 2) / cols
+    v = (np.arange(rows) - rows // 2) / rows
+    fx, fy = np.meshgrid(u, v)
+    radius = np.sqrt(fx ** 2 + fy ** 2)
+    theta = np.arctan2(-fy, fx)
+    radius[rows // 2, cols // 2] = 1
+    log_r = np.log(radius)
+    radial = []
+    for s in range(nscale):
+        fo = 1.0 / (min_wl * mult ** s)
+        g = np.exp(-(log_r - np.log(fo)) ** 2 / (2 * np.log(sigma_f) ** 2))
+        g[rows // 2, cols // 2] = 0
+        radial.append(g)
+    F = np.fft.fftshift(np.fft.fft2(a))
+    pc_max = np.zeros((rows, cols))
+    for o in range(norient):
+        ang = o * np.pi / norient
+        dt = (theta - ang + np.pi / 2) % np.pi - np.pi / 2
+        of = np.exp(-dt ** 2 / (2 * (spread * np.pi / norient) ** 2))
+        sum_resp = np.zeros((rows, cols), complex)
+        amp0 = None
+        for s in range(nscale):
+            resp = np.fft.ifft2(np.fft.ifftshift(F * radial[s] * of))
+            sum_resp += resp
+            if s == 0:
+                amp0 = np.abs(resp)
+        T = noise_k * np.median(amp0)
+        energy = np.maximum(0, np.abs(sum_resp) - T)
+        pc_max = np.maximum(pc_max, energy)
+    return np.clip(pc_max / (np.percentile(pc_max, 99) + 1e-9), 0, 1)
+
+
+def phase_congruency(path: Path, size: int = 384) -> dict:
+    """结构特征密度/集中度（光照不变）。稀疏强特征=极简构图；弥散=密集纹理。
+    ⚠️ 是结构描述器，不是塑料/自然度裁决；与 gabor/spectrum 合看。"""
+    pc = _pc_map(_load_gray(path, size))
+    p = pc.ravel()
+    feat = float((pc > 0.3).mean())
+    kurt = float(((p - p.mean()) ** 4).mean() / ((p.var() + 1e-9) ** 2))
+    if kurt > 12:
+        note = "高峰度：少数强特征主导（极简/孤主体构图），留白处结构≈0"
+    elif kurt < 6:
+        note = "低峰度：结构特征弥散分布（密集纹理/丰富细节）"
+    else:
+        note = "中等集中度"
+    return {"pc_mean": round(float(pc.mean()), 3), "feature_frac": round(feat, 3),
+            "kurtosis": round(kurt, 1), "note": note}
+
+
+def gabor_orientation(path: Path, size: int = 384, norient: int = 8,
+                      wavelength: int = 6, sigma: int = 3) -> dict:
+    """Gabor=e^(iωx)·高斯窗（V1 细胞模型）。各方向能量→方向分布。
+    方向熵低+各向异性高=平滑方向性渐变（塑料感）；方向熵高=笔意多样（自然）。"""
+    a = _load_gray(path, size)
+    rows, cols = a.shape
+    u = (np.arange(cols) - cols // 2) / cols
+    v = (np.arange(rows) - rows // 2) / rows
+    fx, fy = np.meshgrid(u, v)
+    F = np.fft.fftshift(np.fft.fft2(a))
+    energies = []
+    for o in range(norient):
+        ang = o * np.pi / norient
+        fo = 1.0 / wavelength
+        xr = fx * np.cos(ang) + fy * np.sin(ang)
+        yr = -fx * np.sin(ang) + fy * np.cos(ang)
+        sg = sigma / cols
+        g = np.exp(-((xr - fo) ** 2 / (2 * sg ** 2) + yr ** 2 / (2 * sg ** 2)))
+        g += np.exp(-((xr + fo) ** 2 / (2 * sg ** 2) + yr ** 2 / (2 * sg ** 2)))
+        resp = np.fft.ifft2(np.fft.ifftshift(F * g))
+        energies.append(float(np.sum(np.abs(resp) ** 2)))
+    e = np.array(energies)
+    e = e / (e.sum() + 1e-9)
+    entropy = float(-np.sum(e * np.log(e + 1e-12)) / np.log(norient))
+    aniso = float(e.max())
+    dom = int(np.argmax(e)) * 180 // norient
+    if entropy < 0.75 and aniso > 0.4:
+        note = "方向集中：平滑方向性渐变，倾向塑料感（与谱 α 合看）"
+    elif entropy > 0.9:
+        note = "方向多样：笔意/纹理方向丰富，倾向自然材质"
+    else:
+        note = "方向中等"
+    return {"orient_entropy": round(entropy, 3), "anisotropy": round(aniso, 3),
+            "dom_orient": dom, "dist": [round(float(x), 3) for x in e], "note": note}
+
+
+def render_pc(path: Path, out: Path, size: int = 384) -> Path:
+    """PC 结构热图叠加原图（红=强结构特征）。"""
+    pc = _pc_map(_load_gray(path, size))
+    orig = Image.open(path).convert("RGB").resize((size, size))
+    pn = (pc * 255).astype(np.uint8)
+    heat = np.zeros((size, size, 3), np.uint8)
+    heat[..., 0] = pn
+    heat[..., 1] = (pn * 0.3).astype(np.uint8)
+    heat[..., 2] = 255 - pn
+    Image.blend(orig, Image.fromarray(heat), 0.55).save(out)
+    return out
+
+
 def render_hue_circle(path: Path, out: Path, size: int = 720) -> Path:
     """把图像色相画成单位圆上的相位向量 e^(iθ)——欧拉→色彩的可视化。"""
     info = hue_phases(path)
@@ -220,6 +328,11 @@ def main(argv: list[str] | None = None) -> int:
     c = sub.add_parser("circle", help="渲染色相单位圆可视化")
     c.add_argument("image")
     c.add_argument("--out", required=True)
+    pc_cmd = sub.add_parser("pc", help="相位一致性：结构特征密度/集中度（光照不变）")
+    pc_cmd.add_argument("image")
+    pc_cmd.add_argument("--render", help="输出 PC 结构热图叠加路径")
+    gb = sub.add_parser("gabor", help="Gabor 方向谱：纹理方向多样性（塑料感信号）")
+    gb.add_argument("image")
     args = parser.parse_args(argv)
 
     if args.command == "palette":
@@ -243,6 +356,12 @@ def main(argv: list[str] | None = None) -> int:
         curve = info.pop("curve")
         print(json.dumps(info, ensure_ascii=False, indent=2))
         print(f"  谱曲线点数：{len(curve)}（freq, power）")
+    elif args.command == "pc":
+        print(json.dumps(phase_congruency(path), ensure_ascii=False, indent=2))
+        if args.render:
+            print(f"已渲染 PC 热图 {render_pc(path, Path(args.render))}")
+    elif args.command == "gabor":
+        print(json.dumps(gabor_orientation(path), ensure_ascii=False, indent=2))
     return 0
 
 
