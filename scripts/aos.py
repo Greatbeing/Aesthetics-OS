@@ -33,6 +33,9 @@ import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import measure as vmeasure  # noqa: E402  （同目录模块）
+
 CST = timezone(timedelta(hours=8))
 STATE_DIR = ".aos"
 STATE_FILE = "state.json"
@@ -286,12 +289,69 @@ def cmd_evidence(args: argparse.Namespace, root: Path) -> int:
         "surface": args.surface or "unspecified",
         "at": now(),
     }
+    try:
+        record["metrics"] = vmeasure.fingerprint(path)
+        record["measured"] = True
+    except Exception as error:  # noqa: BLE001 - 测量失败不阻断登记，但要留痕
+        record["measured"] = False
+        record["measure_error"] = str(error)
     state.setdefault("evidence", []).append(record)
     save(root, state)
     dims = f"{width}×{height}" if width else "尺寸未知"
     print(f"✅ 已登记成品 #{len(state['evidence'])}：{path.name}（{fmt} {dims}，{record['surface']}）")
+    if record["measured"]:
+        m = record["metrics"]
+        print(
+            f"   形式指纹：留白 {m['flat_area']:.0%}｜边缘密度 {m['edge_density']:.0%}"
+            f"｜色相族 {m['hue_families']}｜熵 {m['entropy']:.2f}"
+        )
+    else:
+        print(f"   ⚠️  未测量画面：{record['measure_error']}")
     if not width:
         print("   注意：读不出尺寸，验收时必须自己确认格式与尺寸。")
+    return 0
+
+
+def cmd_measure(args: argparse.Namespace, root: Path) -> int:
+    path = Path(args.path).expanduser()
+    try:
+        metrics = vmeasure.fingerprint(path)
+    except Exception as error:  # noqa: BLE001
+        die(f"测量失败：{error}")
+
+    print(f"{path.name}  {metrics['pixels']}")
+    print("─" * 46)
+    for key, value in metrics.items():
+        if key == "pixels":
+            continue
+        print(f"  {key:18s} {value}")
+
+    state = load(root)
+    if state is not None:
+        state.setdefault("measurements", []).append(
+            {"path": str(path.resolve()), "sha256": sha256(path), "metrics": metrics, "at": now()}
+        )
+        save(root, state)
+        print(f"   已写入项目测量记录（共 {len(state['measurements'])} 次）")
+
+    if not args.compare:
+        return 0
+
+    other_path = Path(args.compare).expanduser()
+    try:
+        other = vmeasure.fingerprint(other_path)
+    except Exception as error:  # noqa: BLE001
+        die(f"对比失败：{error}")
+
+    print(f"\n对比 → {other_path.name}")
+    print(f"{'指标':18s}{'A':>10s}{'B':>10s}{'Δ':>10s}")
+    print("─" * 48)
+    for key, left, right, delta, relative in vmeasure.compare(metrics, other):
+        flag = "  ← 变化" if relative > vmeasure.REPAINT_TOLERANCE else ""
+        print(f"{key:18s}{left:>10.4f}{right:>10.4f}{delta:>+10.4f}{flag}")
+    repaint, reason = vmeasure.looks_like_repaint(metrics, other)
+    print("─" * 48)
+    print(f"{'⛔ 疑似只换皮：' if repaint else '✅ 画面确有变化：'}{reason}")
     return 0
 
 
@@ -364,6 +424,21 @@ def cmd_verdict(args: argparse.Namespace, root: Path) -> int:
         for ok, label in gate_report(state):
             if not ok:
                 refusals.append(label)
+        measured = [item for item in (state.get("evidence") or []) if item.get("measured")]
+        if not measured:
+            refusals.append("没有任何可测量的成品证据：画面未被测量，等于没看过")
+        rejections = state.get("rejections") or []
+        all_evidence = state.get("evidence") or []
+        if rejections and len(all_evidence) >= 2:
+            last_reject = rejections[-1]["at"]
+            after = [e for e in all_evidence if e["at"] > last_reject and e.get("metrics")]
+            before = [e for e in all_evidence if e["at"] <= last_reject and e.get("metrics")]
+            if after and before:
+                same, why = vmeasure.looks_like_repaint(before[-1]["metrics"], after[-1]["metrics"])
+                if same:
+                    refusals.append(
+                        f"被拒后提交的成品与之前几乎相同（{why}）：这是换皮，不是新方向"
+                    )
         if args.tech != "pass":
             refusals.append(f"技术验收不是 pass（当前 {args.tech}）")
         if len(reason) < MIN_REASON_CHARS:
@@ -411,6 +486,13 @@ def cmd_status(args: argparse.Namespace, root: Path) -> int:
         print(f"最近结论：技术 {last['tech']}／审美 {last['aesthetic']}（{last['at']}）")
     else:
         print("最近结论：尚未验收")
+    measured = [item for item in (state.get("evidence") or []) if item.get("measured")]
+    if measured:
+        m = measured[-1]["metrics"]
+        print(
+            f"最近指纹：留白 {m['flat_area']:.0%}｜边缘密度 {m['edge_density']:.0%}"
+            f"｜色相族 {m['hue_families']}｜重心 ({m['centroid_x']:.2f}, {m['centroid_y']:.2f})"
+        )
     return 0
 
 
@@ -421,6 +503,7 @@ def cmd_audit(args: argparse.Namespace, root: Path) -> int:
     verdicts = state.get("verdicts") or []
     evidence = state.get("evidence") or []
     rejections = state.get("rejections") or []
+    measured = [item for item in evidence if item.get("measured")]
 
     for index, verdict in enumerate(verdicts, 1):
         if verdict["aesthetic"] == "pass" and verdict.get("evidence_n", 0) == 0:
@@ -445,6 +528,31 @@ def cmd_audit(args: argparse.Namespace, root: Path) -> int:
     if proposal:
         for issue in check_proposal(proposal["text"]):
             problems.append(issue)
+
+    # 有成品但一张都没测量：等于「看过」这件事没有证据
+    if evidence and not measured:
+        problems.append(f"{len(evidence)} 份成品全部未测量：没有可比较的形式指纹")
+
+    # 换皮检测：最后一次被拒之后提交的成品，与之前几乎相同
+    if rejections and len(evidence) >= 2:
+        last_reject = rejections[-1]["at"]
+        after = [e for e in evidence if e["at"] > last_reject and e.get("metrics")]
+        before = [e for e in evidence if e["at"] <= last_reject and e.get("metrics")]
+        if after and before:
+            same, why = vmeasure.looks_like_repaint(before[-1]["metrics"], after[-1]["metrics"])
+            if same:
+                problems.append(f"被拒后提交的成品与之前几乎相同（{why}）：只换皮")
+
+    # 决策声明的数值与实测矛盾（启发式，仅对「留白 N%」这类可测声明生效）
+    for decision in (state.get("brief") or {}).get("decisions") or []:
+        match = re.search(r"留白[^0-9]{0,10}(\d{2,3})\s*%", decision)
+        if match and measured:
+            target = int(match.group(1)) / 100
+            actual = measured[-1]["metrics"]["flat_area"]
+            if abs(actual - target) > 0.15:
+                warnings.append(
+                    f"决策写「{decision}」，实测平坦区域 {actual:.0%}，差 {abs(actual - target):.0%}"
+                )
     if not verdicts and (state.get("brief") or {}).get("at"):
         age = datetime.now(CST) - datetime.fromisoformat(state["brief"]["at"])
         if age.days >= 7:
@@ -496,6 +604,11 @@ def build_parser() -> argparse.ArgumentParser:
     evidence.add_argument("path")
     evidence.add_argument("--surface", help="desktop / mobile / state / export")
     evidence.set_defaults(func=cmd_evidence)
+
+    measure_cmd = sub.add_parser("measure", help="测量画面形式指纹，可与另一张对比")
+    measure_cmd.add_argument("path")
+    measure_cmd.add_argument("--compare", help="与之对比的另一张成品")
+    measure_cmd.set_defaults(func=cmd_measure)
 
     reject = sub.add_parser("reject", help="记录被拒方向与失败机制")
     reject.add_argument("--direction", required=True)

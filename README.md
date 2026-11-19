@@ -52,6 +52,18 @@ python $A audit
 
 `aos.py audit` 还会反过来查自己：连续通过零被拒、成品在简报后 60 秒内登记、零证据却签了通过，都会被标出来。
 
+## 证据会被测量，不只是登记
+
+`aos.py evidence` 在登记成品时，自动用 `scripts/measure.py` 生成**无参考形式指纹**（留白占比、边缘密度、边缘均值、对比度、熵、色相集中度与族数、明暗占比、重心、四象限能量等 13 项），并写进项目状态。`verdict --aesthetic pass` 要求至少一份成品确实被测量过——**没测过，等于没看过**。
+
+```bash
+python scripts/aos.py evidence 成品.png --surface desktop   # 登记即测量，打印指纹
+python scripts/aos.py measure 成品.png                      # 单独出指纹
+python scripts/aos.py measure 新方向.png --compare 旧方向.png  # 判是否只换皮
+```
+
+`measure --compare` 不判美丑，只判结构变化：同图自比输出「疑似只换皮」，真正改动构图才输出「画面确有变化」。两次方向被拒后再交的新成品，如果指纹与之前几乎相同，`verdict` 会拒绝签发——红线 2 从「自觉不换皮」变成「数值抓住换皮」。
+
 ---
 
 ## 三条红线
@@ -108,8 +120,9 @@ aesthetics-os/
 ├── modern-design-history.md              # 工业化 → 工艺美术 → 新艺术 → 维也纳与制造联盟
 ├── cross-cultural-design-aesthetics.md   # 文化模型 / 语言不是替换字符串 / 书写系统与阅读方向
 ├── agents/openai.yaml                    # 隐式调用声明
-├── scripts/aos.py                        # 系统调用：带状态、会拒绝的审美判断接口
-├── scripts/test_aos.py                   # 核心回归测试（19 项断言，重点测拒绝路径）
+├── scripts/aos.py                        # 系统调用：带状态、会拒绝的审美判断接口（含 measure）
+├── scripts/measure.py                    # 无参考形式指纹：留白/边缘/色相/重心等 13 项，--compare 判换皮
+├── scripts/test_aos.py                   # 核心回归测试（27 项断言，重点测拒绝路径与测量判别力）
 ├── scripts/lint_skill.py                 # 结构自检：四段式 / 路由覆盖 / 坏链 / 引号与换行
 └── scripts/verify_utf8.py                # 严格 UTF-8 / 无 BOM / 无乱码自检
 ```

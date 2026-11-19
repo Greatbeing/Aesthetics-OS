@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
 """aesthetics-OS 核心的回归测试：重点验证「该拒绝时真的拒绝」。
 
+需要 Pillow（真实解码画面）：pip install pillow
 用法：python scripts/test_aos.py
-退出码 0 表示全部断言通过。测试使用合成头部文件，不依赖任何真实素材；
-真实成品走 demo 时用项目里的实际图片。
+退出码 0 表示全部断言通过。
 """
 
 from __future__ import annotations
 
 import json
+import random
 import subprocess
 import sys
 import tempfile
-import zlib
 from pathlib import Path
 
 AOS = Path(__file__).with_name("aos.py")
 PASS, FAIL = "✅", "⛔"
 results: list[tuple[bool, str]] = []
+
+try:
+    from PIL import Image, ImageDraw
+except ImportError:  # pragma: no cover
+    print("需要 Pillow：pip install pillow", file=sys.stderr)
+    raise SystemExit(2)
 
 
 def run(project: Path, *args: str) -> tuple[int, str]:
@@ -33,14 +39,33 @@ def check(condition: bool, message: str) -> None:
     print(f"{PASS if condition else FAIL} {message}")
 
 
-def fake_png(path: Path, width: int, height: int) -> None:
-    ihdr = (
-        width.to_bytes(4, "big") + height.to_bytes(4, "big")
-        + bytes([8, 2, 0, 0, 0])
-    )
-    chunk = b"IHDR" + ihdr
-    body = b"\x89PNG\r\n\x1a\n" + len(ihdr).to_bytes(4, "big") + chunk + zlib.crc32(chunk).to_bytes(4, "big")
-    path.write_bytes(body + b"\x00" * 32)
+def calm_image(path: Path, size: tuple[int, int] = (1200, 800), shift: float = 0.0) -> None:
+    """大面积米白背景 + 一处小墨块：模拟极简构图。"""
+    img = Image.new("RGB", size, (242, 236, 224))
+    draw = ImageDraw.Draw(img)
+    x0 = int(size[0] * (0.62 + shift))
+    y0 = int(size[1] * 0.55)
+    draw.ellipse([x0, y0, x0 + 90, y0 + 130], fill=(28, 26, 24))
+    img.save(path)
+
+
+def busy_image(path: Path, size: tuple[int, int] = (480, 1024), seed: int = 7) -> None:
+    """高噪点彩色画面：模拟拥挤构图。"""
+    random.seed(seed)
+    img = Image.new("RGB", size)
+    pixels = [
+        (random.randrange(256), random.randrange(256), random.randrange(256))
+        for _ in range(size[0] * size[1])
+    ]
+    img.putdata(pixels)
+    img.save(path)
+
+
+def grab(text: str, key: str) -> float:
+    for line in text.splitlines():
+        if line.strip().startswith(key):
+            return float(line.split()[-1])
+    return float("nan")
 
 
 def main() -> int:
@@ -48,11 +73,15 @@ def main() -> int:
         project = Path(tmp) / "demo"
         project.mkdir()
         ref = project / "参考.png"
-        desk = project / "成品-desktop.png"
-        phone = project / "成品-mobile.png"
-        fake_png(ref, 1200, 800)
-        fake_png(desk, 1440, 900)
-        fake_png(phone, 375, 812)
+        calm = project / "成品-calm.png"
+        busy = project / "成品-busy.png"
+        calm2 = project / "成品-calm-v2.png"
+        copy_of_busy = project / "成品-新方向.png"
+        calm_image(ref, shift=-0.02)
+        calm_image(calm)
+        busy_image(busy)
+        calm_image(calm2, shift=-0.22)
+        copy_of_busy.write_bytes(busy.read_bytes())
 
         code, out = run(project, "init", "--project", "回归测试")
         check(code == 0 and "已初始化" in out, "init 建立状态")
@@ -64,13 +93,15 @@ def main() -> int:
         code, out = run(project, "propose", "要很高级、很现代")
         check(code == 1 and "模板要素" in out, "缺模板要素的命题被拒绝")
 
-        code, out = run(project, "propose", "面向财务负责人完成月度对账时呈现可托付的克制，通过精确数字的层级差表达，高级=对比度+密度+材料")
+        code, out = run(project, "propose",
+                        "面向财务负责人完成月度对账时呈现可托付的克制，通过精确数字的层级差表达，高级=对比度+密度+材料")
         check(code == 0, "合模板且宽泛词已映射的命题被接受")
 
-        code, out = run(project, "propose", "面向财务负责人完成月度对账时呈现可托付的克制，通过精确数字的层级差表达，要高级")
+        code, out = run(project, "propose",
+                        "面向财务负责人完成月度对账时呈现可托付的克制，通过精确数字的层级差表达，要高级")
         check(code == 1 and "宽泛词" in out, "未映射参数的「高级」被拒绝")
 
-        for text in ("差异行进入视觉重力第一层", "强调色只用于待核实状态", "动效只表达状态迁移"):
+        for text in ("留白占比不低于 45%，作为观看呼吸", "强调色只用于待核实状态", "动效只表达状态迁移"):
             run(project, "decide", text)
 
         code, out = run(project, "brief", "--purpose", "让财务快速定位差异",
@@ -88,8 +119,8 @@ def main() -> int:
         code, out = run(project, "evidence", str(project / "不存在.png"))
         check(code == 1 and "不存在" in out, "不存在的成品不能登记")
 
-        code, out = run(project, "evidence", str(desk), "--surface", "desktop")
-        check(code == 0 and "1440×900" in out, "真实成品登记并读出尺寸")
+        code, out = run(project, "evidence", str(calm), "--surface", "desktop")
+        check(code == 0 and "形式指纹" in out, "登记成品时自动测量并打印指纹")
 
         code, out = run(project, "checkpoint")
         check(code == 1, "只有一份成品时检查点不通过（需 ≥2 且覆盖两种宽度）")
@@ -98,8 +129,21 @@ def main() -> int:
                         "--reason", "差异行提前后视线落点正确，但状态色与品牌色对比不足，需再检查移动端")
         check(code == 1, "证据不足时仍然拒绝签发")
 
-        code, out = run(project, "evidence", str(phone), "--surface", "mobile")
-        check(code == 0 and "375×812" in out, "第二份成品（移动端）登记成功")
+        code, out = run(project, "evidence", str(busy), "--surface", "mobile")
+        check(code == 0, "第二份成品登记成功")
+
+        code, calm_out = run(project, "measure", str(calm))
+        code, busy_out = run(project, "measure", str(busy))
+        calm_flat, busy_flat = grab(calm_out, "flat_area"), grab(busy_out, "flat_area")
+        calm_edge, busy_edge = grab(calm_out, "edge_density"), grab(busy_out, "edge_density")
+        check(calm_flat > busy_flat + 0.3, f"极简图留白高于噪点图（{calm_flat:.2f} vs {busy_flat:.2f}）")
+        check(busy_edge > calm_edge + 0.2, f"噪点图边缘密度高于极简图（{busy_edge:.2f} vs {calm_edge:.2f}）")
+
+        code, out = run(project, "measure", str(busy), "--compare", str(busy))
+        check("疑似只换皮" in out, "同一张图自比被判定为只换皮")
+
+        code, out = run(project, "measure", str(busy), "--compare", str(calm))
+        check("画面确有变化" in out, "两张不同图被判定为确有变化")
 
         code, out = run(project, "checkpoint")
         check(code == 0 and "可以进入完整实现" in out, "两份断点证据齐备后检查点通过")
@@ -114,14 +158,28 @@ def main() -> int:
 
         run(project, "reject", "--direction", "方向A-深色玻璃卡", "--mechanism", "只换了材质，层级与重力没变")
         code, out = run(project, "reject", "--direction", "方向B-编辑极简", "--mechanism", "间距收紧但仍靠装饰建立焦点")
-        check(code == 1 or "两个方向被拒" in out, "第二次被拒后提示必须换证据")
+        check("两个方向被拒" in out, "第二次被拒后提示必须换证据")
 
         code, out = run(project, "verdict", "--tech", "pass", "--aesthetic", "pass",
                         "--reason", "这次真的不一样了，因为我把差异行提到了第一层，删掉了渐变光带")
         check(code == 1 and "新证据" in out, "两次被拒后没有新证据，拒绝签发")
 
+        # 提交一份与旧成品字节相同的「新方向」：时间算新证据，但指纹没变
+        code, out = run(project, "evidence", str(copy_of_busy), "--surface", "desktop")
+        check(code == 0, "同内容副本可以登记（登记层不做价值判断）")
+        code, out = run(project, "verdict", "--tech", "pass", "--aesthetic", "pass",
+                        "--reason", "这次真的不一样了，因为我把差异行提到了第一层，删掉了渐变光带")
+        check(code == 1 and "换皮" in out, "指纹未变的新证据被判定为换皮并拒绝签发")
+
+        # 真正改变构图的成品才允许通过
+        code, out = run(project, "evidence", str(calm2), "--surface", "desktop")
+        check(code == 0, "真正改动后的成品登记成功")
+        code, out = run(project, "verdict", "--tech", "pass", "--aesthetic", "pass",
+                        "--reason", "主体转移到左侧三分位，留白结构改变，差异行的重力关系成立")
+        check(code == 0 and "审美状态：pass" in out, "画面确有变化后允许签发通过")
+
         code, out = run(project, "audit")
-        check(code in (0, 1) and "审美审计" in out, "audit 可运行并给出报告")
+        check("审美审计" in out, "audit 可运行并给出报告")
 
         # 伪造一次「零证据通过」，验证审计能抓出来
         state_file = project / ".aos" / "state.json"
