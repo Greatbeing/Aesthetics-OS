@@ -146,11 +146,14 @@ aesthetics-os/
 ├── scripts/aos.py                        # 系统调用：带状态、会拒绝的审美判断接口（含 measure/critique/loop）
 ├── scripts/measure.py                    # 无参考形式指纹：留白/边缘/色相/重心等 13 项，--compare 判换皮
 ├── scripts/critique.py                   # 质量判据：鉴赏家协议提示/校验/绑定像素，真实视觉执行
+├── scripts/euler_lens.py                 # 欧拉透镜：色相相位和谐/调色板旋转/傅里叶功率谱（e^(iθ) 迁移）
 ├── scripts/test_aos.py                   # 核心回归测试（35 项断言，重点测拒绝路径与测量/审判判别力）
+├── scripts/test_euler_lens.py            # 欧拉透镜测试（11 项：相位旋转/无彩色/互补/留白混淆）
 ├── scripts/lint_skill.py                 # 结构自检：四段式 / 路由覆盖 / 坏链 / 引号与换行
 ├── scripts/verify_utf8.py                # 严格 UTF-8 / 无 BOM / 无乱码自检
 └── references/
-    ├── critique-protocol.md              # 质量审判协议：6 红线 + 三轴 + 5 反射 + 结论 + 闭环位置
+    ├── critique-protocol.md              # 质量审判协议：6 红线 + 三轴 + 5 反射 + 结论 + 端到端闭环
+    ├── euler-lens.md                     # 欧拉公式→美学迁移：色相相位/功率谱/黄金螺线（含诚实边界）
     └── taste-profile.json                # 品味锚点（所有者已确认偏好，项目可覆盖）
 ```
 

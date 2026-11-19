@@ -35,9 +35,11 @@ init → propose → brief(decide) → checkpoint → evidence → measure → c
 `verdict --aesthetic pass` 是唯一能签发「通过」的出口，它会被脚本拒绝，除非证据齐备。两道独立的眼：
 
 - **measure 测结构**：`evidence` 登记成品即自动测量（`scripts/measure.py` 的 13 项无参考形式指纹：留白、边缘、色相、重心等），`verdict` 要求至少一份成品被测量过——**没测过，等于没看过**。
-- **critique 判质量**：`scripts/critique.py` 把鉴赏家协议（6 红线 + 三轴 + 5 反射 + 结论）交给**真实视觉**执行（vision_analyze / Agnes 多模态 / 人眼），结果绑定到成品像素哈希。`verdict` 要求最新成品有一份结论为 pass 的审判——**测过结构≠评过质量**。形式指纹分得清“变没变”，分不清“变美还是变丑”；后者必须真的看画面。
+- **critique 判质量**：`scripts/critique.py` 把鉴赏家协议（6 红线 + 三轴 + 5 反射 + 结论）交给**真实视觉**执行（vision_analyze / Agnes 多模态 / 人眼），结果绑定到成品像素哈希。`verdict` 要求最新成品有一份结论为 pass 的审判——**测过结构≠评过质量**。形式指纹分得清“变没变”，分不清“变美还是变丑”；后者必须真的看画面。审判对照**命题意图**判：命题要的核心感受没到位，即使三轴命中锚点、红线全过，也判 revise——「整体可交付」≠「命题达成」。
 
-`loop` 记录每一轮生成→测量→审判，并用指纹对比检测这一轮是否真改动（换皮会被标出）。**红线不靠自觉，靠接口。**
+`loop` 记录每一轮生成→测量→审判，并用指纹对比检测这一轮是否真改动（换皮会被标出）。
+
+还有一道数学透镜 `scripts/euler_lens.py`（欧拉公式迁移）：色相环=复平面单位圆，色彩和谐=相位关系，`palette` 用 e^(iΔθ) 旋转设计和谐调色板指导生成，`hue` 实测 resultant R，`spectrum` 用傅里叶功率谱 α 测纹理自然度（留白构图会混淆，须与 measure 合看）。它让「和谐」与「自然」从凭感觉变成可设计、可测量。**红线不靠自觉，靠接口。** 端到端「给方向→自动产出合格成品」的执行步骤见 [references/critique-protocol.md](references/critique-protocol.md) 的「端到端执行」节。
 
 ## 审美反射
 
@@ -83,6 +85,7 @@ init → propose → brief(decide) → checkpoint → evidence → measure → c
 - 视觉重要的网页或界面：完整阅读 [web-aesthetic-protocol.md](web-aesthetic-protocol.md)。
 - 复杂产品、多格式系统或最终品味验收：[product-aesthetic-os.md](product-aesthetic-os.md)。
 - 成品质量审判与生成→审判→迭代闭环：[references/critique-protocol.md](references/critique-protocol.md)，由 `scripts/critique.py` 执行；品味锚点在 [references/taste-profile.json](references/taste-profile.json)。
+- 色彩和谐与纹理自然度的数学透镜（欧拉公式 e^(iθ) 迁移）：[references/euler-lens.md](references/euler-lens.md)，由 `scripts/euler_lens.py` 执行；色相=单位圆相位，调色板相位旋转指导生成 prompt，功率谱 α 测纹理（留白会混淆，须合看）。
 - 演示文稿、仪表盘、数据密集界面、图像或视频生成：[product-aesthetic-os.md](product-aesthetic-os.md) 的产品类型启发，再按信息密度配 [typography-aesthetics.md](typography-aesthetics.md) 或 [perception-and-form.md](perception-and-form.md)。
 - 移动端、小程序与长流程：层级与点击区域看 [perception-and-form.md](perception-and-form.md)，状态、反馈与恢复看 [interaction-design-aesthetics.md](interaction-design-aesthetics.md)。
 - 审美判断、感知形式与审美范畴：[aesthetic-judgment-theories.md](aesthetic-judgment-theories.md)、[perception-and-form.md](perception-and-form.md)、[aesthetic-categories.md](aesthetic-categories.md)。

@@ -56,6 +56,24 @@
 
 `verdict --aesthetic pass` 现在要求：最新成品有一份**绑定到该像素哈希**、结论为 pass 的 critique。测过结构≠评过质量；没评过质量，接口不产出“通过”。
 
+### 端到端执行（给方向 → 自动产出合格成品）
+
+已验证可跑通的标准闭环，给方向后自主执行，不逐轮问用户：
+
+1. **立项**：`aos.py --root <dir> init --project <名>` → `propose`（命题含受众/任务/情绪/机制）→ `decide` 2-3 条（把品味锚点写成可验收的形式决定，如「留白≥60%」「唯一浓墨重音」）→ `brief --purpose … --audience … --signature … --nongoal … --evidence <参考图>`。
+2. **设计和谐**（色彩相关任务）：`euler_lens.py palette <基色相> --scheme <mono/analogous/complementary/split/triadic>` 用相位旋转 e^(iΔθ) 推出和谐调色板，把色相/hex 写进生成 prompt。
+3. **生成**：`image_generate`（或执行 Skill）按命题+决定+调色板出图，下载到本地。
+4. **测结构**：`aos.py --root <dir> evidence <png> --surface desktop` 登记即自动 measure；`aos.py --root <dir> loop <png> --fix '本轮改了什么'` 记一轮并用指纹对比上一轮（换皮会被标出）；色彩/纹理另用 `euler_lens.py hue <png>`（resultant R）与 `spectrum <png>`（功率谱 α，留白会混淆须合看）。
+5. **判质量**：`aos.py --root <dir> critique prepare <png>` 生成审判提示 → 用 **vision_analyze 真实看画面**，按 6 红线/三轴/5 反射/结论填 JSON → `aos.py --root <dir> critique register <png> --file <json>`（绑定像素哈希、校验结构）。
+6. **迭代**：revise → 按 `priority_fix` 改 prompt 重生成，回到 4；pass → 进 7。
+7. **签发**：`aos.py --root <dir> verdict --tech pass --aesthetic pass --reason …` → `audit` 复查。
+
+**审判对照命题意图，不是整体观感。** 第一轮常「整体可交付」但命题要的核心感受没到位（如「被天地推远」未达成）——此时即使三轴命中锚点、红线全过，也判 revise 并给具体修改。守住命题契约才会逼出真正更好的结果；橡皮图章会让闭环空转。
+
+**生成端 prompt 策略（水墨尤甚）：** 要「虚/远/融」的元素别描述成离散清晰物体——模型会画成浓墨/矢量锐边/硬线条的「贴上去的图标」。改写成与背景同一湿笔的「一抹中灰墨影、无轮廓无硬边、渗入白雾几乎消融」。连续几轮同一硬伤不改，往往是 prompt 把元素当物体描述了，换描述策略而非重复堆形容词。
+
+**后端取舍：** 审判主路径是 agent 的 vision_analyze → register；`critique run` 的多模态 API 后端需相应 key，缺 key 时走主路径，别卡在自动后端。图生图编辑模型未必可用，不可用时回退文生图并改写 prompt 策略——编辑能保构图只改局部，文生图每轮整图重生成，需把已正确的部分也写进 prompt 稳住。
+
 ## 局限（诚实声明）
 
 - 审判是视觉模型的判断，不是客观真值；不同模型/不同次可能略有出入。
