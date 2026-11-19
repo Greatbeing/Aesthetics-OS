@@ -12,6 +12,48 @@
 
 ---
 
+## 它不是顾问，是操作系统
+
+散文可以被忽略，状态机不能。所以本技能分三层：
+
+| 层 | 位置 | 作用 |
+|---|---|---|
+| 内核 | `KERNEL.md` | 约 1100 字，放进任何 agent 的常驻上下文 |
+| 系统调用 | `scripts/aos.py` | 带持久状态，会拒绝签发结论 |
+| 模块 | 15 篇参考 | 按需读一篇，不预加载 |
+
+品味存在**项目**里，不是存在模型里。换会话、换模型、隔一周回来，判断接着上次走：
+
+```bash
+A=scripts/aos.py
+python $A init
+python $A propose "面向收藏者完成对一幅长卷的观看时呈现被山水推远的静气，通过大面积留白与青绿设色的一处重音表达，高级=色彩饱和度+留白比例+材质颗粒"
+python $A decide "留白占比不低于 45%，作为观看呼吸"
+python $A brief --purpose … --audience … --signature … --nongoal … --nongoal … --evidence 参考.png
+python $A evidence 成品.png --surface desktop
+python $A evidence 成品-mobile.png --surface mobile
+python $A checkpoint
+python $A verdict --tech pass --aesthetic pass --reason …
+python $A audit
+```
+
+它会拒绝。下面是真实输出，不是示意：
+
+```
+⛔ 拒绝签发「审美通过」：
+   - 审美命题（用 propose 写一句）
+   - 品味简报缺 目的、受众、拒绝的机制、标志性动作、决策 0/3、非目标 <2、参考证据
+   - 成品证据 0 份（需 ≥2，覆盖不同断点或状态）
+   - 审美结论理由不足 20 字（现在 19 字）
+未签发任何结论。只能说「技术通过，审美暂定」。
+```
+
+这条拒绝把红线 1 变成了不变量：**没有成品证据，接口不产出「通过」这个词**。同理，两次方向被拒后不补充新证据，签发同样失败——红线 2 也钉死在状态里。
+
+`aos.py audit` 还会反过来查自己：连续通过零被拒、成品在简报后 60 秒内登记、零证据却签了通过，都会被标出来。
+
+---
+
 ## 三条红线
 
 这三条不是建议，是硬门。速度、服从、用户催促、已有投入，都不是例外。
@@ -48,7 +90,8 @@
 
 ```
 aesthetics-os/
-├── SKILL.md                              # 主入口：审美反射 / 三条红线 / 短循环 / 路由
+├── KERNEL.md                             # 常驻内核：反射 / 红线 / 接口 / 模块路由（约 1100 字）
+├── SKILL.md                              # 主入口：操作系统分层 / 审美反射 / 三条红线 / 短循环 / 路由
 ├── web-aesthetic-protocol.md             # 网页与界面：不可跳过的顺序 + 三道门槛 + 常见借口与纠正
 ├── product-aesthetic-os.md               # 产品与多格式系统：审美命题 / 决策集合 / 通用质量门槛 / 类型启发
 ├── perception-and-form.md                # 格式塔 / 前注意特征 / 视觉层级与负空间 / 加工流畅性
@@ -65,6 +108,8 @@ aesthetics-os/
 ├── modern-design-history.md              # 工业化 → 工艺美术 → 新艺术 → 维也纳与制造联盟
 ├── cross-cultural-design-aesthetics.md   # 文化模型 / 语言不是替换字符串 / 书写系统与阅读方向
 ├── agents/openai.yaml                    # 隐式调用声明
+├── scripts/aos.py                        # 系统调用：带状态、会拒绝的审美判断接口
+├── scripts/test_aos.py                   # 核心回归测试（19 项断言，重点测拒绝路径）
 ├── scripts/lint_skill.py                 # 结构自检：四段式 / 路由覆盖 / 坏链 / 引号与换行
 └── scripts/verify_utf8.py                # 严格 UTF-8 / 无 BOM / 无乱码自检
 ```

@@ -1,6 +1,9 @@
 # 技能本地评测运行记录，不随技能分发
 .plugin-eval/
 
+# 项目的审美状态（属于被设计项目，不进仓库）
+.aos/
+
 # Python
 __pycache__/
 *.py[cod]

@@ -25,8 +25,8 @@ PROTOCOL_EXEMPT = {
     "product-aesthetic-os.md": "协议：自带通用质量门槛与品味审阅协议",
 }
 
-# 不参与参考篇检查的文件
-NON_REFERENCE = {"SKILL.md", "README.md"}
+# 不参与参考篇检查的文件（内核与索引不是模块）
+NON_REFERENCE = {"SKILL.md", "README.md", "KERNEL.md"}
 
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)#]+?)\)")
 H2_RE = re.compile(r"^## (.+)$", re.M)
