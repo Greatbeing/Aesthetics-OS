@@ -1,6 +1,6 @@
 ---
 name: aesthetics-os
-description: 用于视觉选择、风格方向、重设计、视觉批评和最终审美验收；尤其用于成品模板化、方向被否定、技术正确但不好看，或用户要求无证据地宣布通过。技能路径显示为 `rN/...` 时先展开根目录映射，禁止把 `rN` 当成真实子目录；Windows PowerShell 必须用 `Get-Content -Raw -Encoding utf8` 读取。
+description: 视觉选择、风格方向、重设计、视觉批评与最终审美验收；拦截模板化、方向被否定后换皮、技术正确但不好看、无证据宣布通过。
 triggers: [视觉审计, 审美验收, 重设计, 视觉批评, 模板化, 方向被否定, 技术正确但不好看, 无证据宣布通过]
 ---
 
@@ -11,6 +11,8 @@ triggers: [视觉审计, 审美验收, 重设计, 视觉批评, 模板化, 方�
 让审美成为每次视觉选择前的默认判断，不是完成后的装饰。视觉任务中默认静默运行，无需把内部审美检查逐项展示给用户；纯逻辑、数据、性能或无视觉影响的任务直接跳过。
 
 先预测受众会看见什么、感到什么、理解什么，再决定形式。审美服务于目的、可用性、无障碍、性能和真实性。
+
+执行 Skill 负责生产和技术验证；本 Skill 只负责审美直觉、一致性与独立审美门槛。显式输出只给命题、证据、优先修改、记忆点、非目标和验收结论。
 
 ## 审美反射
 
@@ -55,11 +57,18 @@ triggers: [视觉审计, 审美验收, 重设计, 视觉批评, 模板化, 方�
 
 - 视觉重要的网页或界面：完整阅读 [web-aesthetic-protocol.md](web-aesthetic-protocol.md)。
 - 复杂产品、多格式系统或最终品味验收：[product-aesthetic-os.md](product-aesthetic-os.md)。
+- 演示文稿、仪表盘、数据密集界面、图像或视频生成：[product-aesthetic-os.md](product-aesthetic-os.md) 的产品类型启发，再按信息密度配 [typography-aesthetics.md](typography-aesthetics.md) 或 [perception-and-form.md](perception-and-form.md)。
+- 移动端、小程序与长流程：层级与点击区域看 [perception-and-form.md](perception-and-form.md)，状态、反馈与恢复看 [interaction-design-aesthetics.md](interaction-design-aesthetics.md)。
 - 审美判断、感知形式与审美范畴：[aesthetic-judgment-theories.md](aesthetic-judgment-theories.md)、[perception-and-form.md](perception-and-form.md)、[aesthetic-categories.md](aesthetic-categories.md)。
 - 中国画论与绘画之外的中国美学：[chinese-painting-theory.md](chinese-painting-theory.md)、[chinese-aesthetics-beyond-painting.md](chinese-aesthetics-beyond-painting.md)。
 - 西方史线、当代议题与全球视角：[western-aesthetics.md](western-aesthetics.md)、[contemporary-frontiers.md](contemporary-frontiers.md)、[global-aesthetic-lenses.md](global-aesthetic-lenses.md)。
 - 现代设计史与日本美学深探：[modern-design-history.md](modern-design-history.md)、[japanese-aesthetics-deep-dive.md](japanese-aesthetics-deep-dive.md)。
 - 排版、交互与跨文化设计：[typography-aesthetics.md](typography-aesthetics.md)、[interaction-design-aesthetics.md](interaction-design-aesthetics.md)、[cross-cultural-design-aesthetics.md](cross-cultural-design-aesthetics.md)。
-- 安装或复制后运行 [scripts/verify_utf8.py](scripts/verify_utf8.py) 检查严格 UTF-8、无 BOM 和无常见乱码。
 
-执行 Skill 负责生产和技术验证；本 Skill 只负责审美直觉、一致性与独立审美门槛。显式输出只给命题、证据、优先修改、记忆点、非目标和验收结论。
+## 读取约定
+
+- 默认只加载与当前任务直接相关的一至两篇参考，读完判断即停；不预加载全部 15 篇。方向未定时先读协议，方向已定后只为具体缺陷补一篇。
+- 参考篇是判断材料，不是引用来源展示；除用户要求考据，不把术语搬进交付物。
+- 技能路径显示为 `rN/...` 时先展开根目录映射，禁止把 `rN` 当成真实子目录。
+- Windows PowerShell 读本技能文件用 `Get-Content -Raw -Encoding utf8`。
+- 改动本技能后依次运行 [scripts/lint_skill.py](scripts/lint_skill.py) 与 [scripts/verify_utf8.py](scripts/verify_utf8.py)。
