@@ -26,7 +26,7 @@ PROTOCOL_EXEMPT = {
 }
 
 # 不参与参考篇检查的文件（内核与索引不是模块）
-NON_REFERENCE = {"SKILL.md", "README.md", "KERNEL.md"}
+NON_REFERENCE = {"SKILL.md", "README.md", "README.en.md", "KERNEL.md"}
 
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)#]+?)\)")
 H2_RE = re.compile(r"^## (.+)$", re.M)
