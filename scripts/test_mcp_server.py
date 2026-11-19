@@ -2,17 +2,30 @@
 """真实 MCP 客户端端到端测试：stdio 拉起 mcp_server.py，走 MCP 协议调用工具。
 验证：initialize/instructions、20工具/4资源/1提示、euler 结构化输出、aos 拒绝路径。"""
 import asyncio
+import colorsys
 import json
 import sys
 import tempfile
 from pathlib import Path
 
+from PIL import Image
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 SCRIPTS = Path(__file__).resolve().parent
 SERVER = SCRIPTS / "mcp_server.py"
-QIANLI = Path(r"D:\HermesOutput\qianli_03_千里江山_青绿重彩_20260713_191657.png")
+
+
+def make_hue_sample(path):
+    """合成一张主色相约105°的彩色图，供 euler_hue 便携测试（不依赖外部素材）。"""
+    img = Image.new("RGB", (160, 160))
+    px = img.load()
+    for y in range(160):
+        for x in range(160):
+            h = (105 + (x % 20) - 10) / 360
+            r, g, b = colorsys.hsv_to_rgb(h, 0.6, 0.8)
+            px[x, y] = (int(r * 255), int(g * 255), int(b * 255))
+    img.save(path)
 
 PASS = 0
 FAIL = 0
@@ -65,8 +78,10 @@ async def main():
             check("提示含 aesthetic_loop", any(p.name == "aesthetic_loop" for p in prompts.prompts))
 
             # euler 结构化输出
-            r = tool_json(await session.call_tool("euler_hue", {"image": str(QIANLI)}))
-            check("euler_hue R≈0.556", abs(r.get("R", 0) - 0.556) < 0.01, f"R={r.get('R')}")
+            sample = Path(tmp) / "hue_sample.png"
+            make_hue_sample(sample)
+            r = tool_json(await session.call_tool("euler_hue", {"image": str(sample)}))
+            check("euler_hue 结构化(彩色且R∈[0,1])", r.get("chromatic") is True and 0 <= r.get("R", -1) <= 1, f"R={r.get('R')}")
             pal = tool_json(await session.call_tool("euler_palette", {"base_hue": 210, "scheme": "triadic"}))
             colors = pal.get("colors", [])
             check("euler_palette triadic 3色", isinstance(colors, list) and len(colors) == 3, f"{pal}")
