@@ -155,6 +155,7 @@ python scripts/lint_skill.py .       # structure
 python scripts/verify_utf8.py .      # encoding
 python scripts/test_aos.py           # core refusal paths (needs Pillow)
 python scripts/test_euler_lens.py    # Euler lenses (needs numpy + Pillow)
+python scripts/test_mcp_server.py    # MCP end-to-end (needs mcp SDK)
 ```
 
 ## Division of labor with other skills
@@ -168,6 +169,16 @@ Priority fix: lift the delta row to the first layer of visual gravity, delete th
 Memory point: a single cinnabar red, marking only “to verify.”
 Non-goals: no “tech feel,” no grid or scanlines.
 Verdict: technical pass, aesthetic pending. Need real screenshots at 1440 and 375 breakpoints first.
+```
+
+## As MCP tools
+
+`scripts/mcp_server.py` (official mcp SDK 2.x) exposes the state machine and Euler lenses as **21 MCP tools + 4 resources + a loop prompt**, callable by any MCP client (Hermes / Claude Desktop / Cursor). KERNEL is delivered as server instructions on initialize, so the judgment layer is not lost; refusal from verdict tools returns structured `{ok:false}` that the agent’s tool loop must handle.
+
+The delivery gate `aos_delivery_gate` (also `scripts/delivery_gate.py`) hardens red line 1 into an interceptable gate: if the latest verdict is not an issued pass, `passed=false`. Call it before claiming done; a non-zero exit blocks delivery. Registration and the tool catalog are in [references/mcp-server.md](references/mcp-server.md).
+
+```bash
+python scripts/test_mcp_server.py    # real MCP client over stdio, 13 assertions
 ```
 
 ## Honest boundaries

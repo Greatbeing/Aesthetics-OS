@@ -169,11 +169,15 @@ Aesthetics-OS/
 ├── scripts/euler_lens.py                 # 欧拉五透镜：palette/hue/spectrum/pc/gabor/spiral
 ├── scripts/test_aos.py                   # 核心回归（35 断言，重点测拒绝路径）
 ├── scripts/test_euler_lens.py            # 欧拉透镜回归（18 断言）
+├── scripts/mcp_server.py                 # MCP 服务器：21 工具 + 4 资源 + 闭环 prompt
+├── scripts/delivery_gate.py              # 交付门禁：未过不许声称完成（exit 0/1）
+├── scripts/test_mcp_server.py            # 真实 MCP 客户端端到端（13 断言）
 ├── scripts/lint_skill.py                 # 结构自检：四段式 / 路由 / 坏链 / 引号换行
 ├── scripts/verify_utf8.py                # 严格 UTF-8 / 无 BOM / 无乱码
 ├── references/
 │   ├── critique-protocol.md              # 审判协议 + 端到端闭环
 │   ├── euler-lens.md                     # 欧拉→美学迁移（含诚实边界）
+│   ├── mcp-server.md                     # MCP 接入：注册 / 工具目录 / 交付门禁
 │   └── taste-profile.json                # 品味锚点（项目可覆盖）
 └── docs/                                 # GitHub Pages 首页
 ```
@@ -194,6 +198,7 @@ python scripts/lint_skill.py .       # 结构
 python scripts/verify_utf8.py .      # 编码
 python scripts/test_aos.py           # 核心拒绝路径（需 Pillow）
 python scripts/test_euler_lens.py    # 欧拉透镜（需 numpy + Pillow）
+python scripts/test_mcp_server.py    # MCP 端到端（需 mcp SDK）
 ```
 
 ## 和其他 Skill 的分工
@@ -207,6 +212,16 @@ python scripts/test_euler_lens.py    # 欧拉透镜（需 numpy + Pillow）
 记忆点：唯一一处朱砂红，只标注「待核实」。
 非目标：不做「科技感」，不加网格与扫描线。
 结论：技术通过，审美暂定——需看过 1440 与 375 两个断点的实际截图再定。
+```
+
+## 接成 MCP 工具
+
+`scripts/mcp_server.py`（官方 mcp SDK 2.x）把状态机与欧拉透镜暴露为 **21 个 MCP 工具 + 4 资源 + 闭环 prompt**，任何 MCP 客户端（Hermes / Claude Desktop / Cursor）都能规范调用。KERNEL 作 instructions 在 initialize 下发，判断层不丢；裁决类工具的拒绝以结构化 `{ok:false}` 返回，agent 的工具循环必须处理。
+
+交付门禁 `aos_delivery_gate`（亦即 `scripts/delivery_gate.py`）把红线1硬化成可拦截的闸：最新验收非已签发 pass 就 `passed=false`，宣布完成前必调，非零退出即拦截交付。注册配置与工具目录见 [references/mcp-server.md](references/mcp-server.md)。
+
+```bash
+python scripts/test_mcp_server.py    # 真实 MCP 客户端 stdio 端到端，13 断言
 ```
 
 ## 诚实边界
