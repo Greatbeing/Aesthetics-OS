@@ -1,0 +1,7 @@
+interface:
+  display_name: "aesthetics-OS"
+  short_description: "让审美成为每次视觉选择前的默认判断、执行监督与成品验收层。"
+  default_prompt: "使用 $aesthetics-os 作为默认静默的审美直觉层，在每次视觉选择前判断目的、层级、具体性与克制，并对实际成品完成独立审美验收。"
+
+policy:
+  allow_implicit_invocation: true

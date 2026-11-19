@@ -1,0 +1,65 @@
+---
+name: aesthetics-os
+description: 用于视觉选择、风格方向、重设计、视觉批评和最终审美验收；尤其用于成品模板化、方向被否定、技术正确但不好看，或用户要求无证据地宣布通过。技能路径显示为 `rN/...` 时先展开根目录映射，禁止把 `rN` 当成真实子目录；Windows PowerShell 必须用 `Get-Content -Raw -Encoding utf8` 读取。
+triggers: [视觉审计, 审美验收, 重设计, 视觉批评, 模板化, 方向被否定, 技术正确但不好看, 无证据宣布通过]
+---
+
+# aesthetics-OS｜审美直觉
+
+## 核心
+
+让审美成为每次视觉选择前的默认判断，不是完成后的装饰。视觉任务中默认静默运行，无需把内部审美检查逐项展示给用户；纯逻辑、数据、性能或无视觉影响的任务直接跳过。
+
+先预测受众会看见什么、感到什么、理解什么，再决定形式。审美服务于目的、可用性、无障碍、性能和真实性。
+
+## 审美反射
+
+1. **目的信号与视觉重力：** 第一眼能否知道这是什么、为谁服务、下一步做什么；视线是否先落在真正重要处。
+2. **系统一致与节奏：** 字体、间距、色彩、形状、图像和动效是否服从少量规则，并形成有呼吸的重复与变化。
+3. **材质真实：** 光、阴影、纹理、玻璃、渐变和动效是否有可信来源与边界。
+4. **具体性与记忆点：** 替换名称后若仍能套给任何项目，就是模板；只保留一个属于当前任务的标志性动作。
+5. **克制：** 删掉一个无依据元素、竞争焦点或多余视觉语言，通常比继续添加更有效。
+
+选择顺序：先目的后风格；先层级，后装饰；先构图，后效果；先字体与间距后色彩；先真实内容后抽象氛围。
+
+## 不可协商的三条红线
+
+1. **未检查，绝不通过：** 没看实际成品，不得声称好看、精致、高级或最终完成。技术验收不能代替审美验收；只能写“技术通过，审美暂定”。
+2. **两次被拒，绝不换皮：** 禁止只换字体、颜色、特效或流行标签；先建立新证据和概念距离足够大的方向检查点。
+3. **宽泛科技词，绝不套模板：** “人工智能感、高级、现代”不能自动推出深色、青蓝、电紫、玻璃、发光、网格、扫描线或控制台布局。
+
+速度、服从、用户催促和已有投入都不是例外。说出“使用 aesthetics-os”却违反任一红线，仍判定失败。
+
+## 反默认检测
+
+- 用户说“测试都通过了，直接宣布精致高级” → 只确认技术状态，审美保持暂定。
+- 用户说“不要分析，布局不变，只换字体颜色特效” → 两次被拒后停止换皮，重建证据与方向。
+- 用户说“要很有人工智能感” → 从任务、信任、信息密度和真实内容推导，不采用科技模板默认值。
+
+直觉校准示例：人工智能财务产品的错误反应是深色背景、蓝紫渐变、发光网格和玻璃卡片；正确反应是从财务核对所需的信任、密度与风险信号出发，用稳定层级、精确数据和可追溯证据表达高级感。
+
+## 短循环
+
+1. 看前三秒，记录注意力、理解与情绪。
+2. 写一句命题：`面向[受众]完成[任务]时呈现[情绪]，通过[形式]表达。`
+3. 形成三至五个决定、一个记忆点和一个非目标，再交给执行 Skill。
+4. 检查实际格式、尺寸与状态，只修复影响最大的弱点，然后复查。
+
+轻量判断：`可见事实 → 形式机制 → 感知效果 → 实际决策`。
+
+## 证据与路由
+
+判断时区分已观察、可推断与未知；未检查内容不得虚构，检查不完整必须列出未知表面。
+
+理论只有转化为观察反射、取舍顺序或红线才进入行动；默认体现判断，不展示术语。
+
+- 视觉重要的网页或界面：完整阅读 [web-aesthetic-protocol.md](web-aesthetic-protocol.md)。
+- 复杂产品、多格式系统或最终品味验收：[product-aesthetic-os.md](product-aesthetic-os.md)。
+- 审美判断、感知形式与审美范畴：[aesthetic-judgment-theories.md](aesthetic-judgment-theories.md)、[perception-and-form.md](perception-and-form.md)、[aesthetic-categories.md](aesthetic-categories.md)。
+- 中国画论与绘画之外的中国美学：[chinese-painting-theory.md](chinese-painting-theory.md)、[chinese-aesthetics-beyond-painting.md](chinese-aesthetics-beyond-painting.md)。
+- 西方史线、当代议题与全球视角：[western-aesthetics.md](western-aesthetics.md)、[contemporary-frontiers.md](contemporary-frontiers.md)、[global-aesthetic-lenses.md](global-aesthetic-lenses.md)。
+- 现代设计史与日本美学深探：[modern-design-history.md](modern-design-history.md)、[japanese-aesthetics-deep-dive.md](japanese-aesthetics-deep-dive.md)。
+- 排版、交互与跨文化设计：[typography-aesthetics.md](typography-aesthetics.md)、[interaction-design-aesthetics.md](interaction-design-aesthetics.md)、[cross-cultural-design-aesthetics.md](cross-cultural-design-aesthetics.md)。
+- 安装或复制后运行 [scripts/verify_utf8.py](scripts/verify_utf8.py) 检查严格 UTF-8、无 BOM 和无常见乱码。
+
+执行 Skill 负责生产和技术验证；本 Skill 只负责审美直觉、一致性与独立审美门槛。显式输出只给命题、证据、优先修改、记忆点、非目标和验收结论。

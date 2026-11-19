@@ -1,0 +1,9 @@
+# 仓库内统一 LF；Markdown 与脚本跨平台一致
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.pdf binary
