@@ -40,7 +40,6 @@ def check(condition: bool, message: str) -> None:
 
 
 def calm_image(path: Path, size: tuple[int, int] = (1200, 800), shift: float = 0.0) -> None:
-    """大面积米白背景 + 一处小墨块：模拟极简构图。"""
     img = Image.new("RGB", size, (242, 236, 224))
     draw = ImageDraw.Draw(img)
     x0 = int(size[0] * (0.62 + shift))
@@ -50,7 +49,6 @@ def calm_image(path: Path, size: tuple[int, int] = (1200, 800), shift: float = 0
 
 
 def busy_image(path: Path, size: tuple[int, int] = (480, 1024), seed: int = 7) -> None:
-    """高噪点彩色画面：模拟拥挤构图。"""
     random.seed(seed)
     img = Image.new("RGB", size)
     pixels = [
@@ -66,6 +64,34 @@ def grab(text: str, key: str) -> float:
         if line.strip().startswith(key):
             return float(line.split()[-1])
     return float("nan")
+
+
+def make_critique(conclusion: str = "pass", fail_line: str | None = None,
+                  anonymous: bool = False, incomplete: bool = False) -> dict:
+    rl = {k: {"status": "pass", "evidence": "看见的具体证据说明"}
+          for k in ("CS", "FP", "TX", "AI", "CU", "CM")}
+    if fail_line:
+        rl[fail_line]["status"] = "fail"
+    result = {
+        "red_lines": rl,
+        "three_axis": {"x": 2, "y": 3, "z": 1, "note": "对照锚点"},
+        "reflexes": {k: {"observed": "看见的事实", "mechanism": "机制", "effect": "效果"}
+                     for k in ("purpose", "system", "material", "specificity", "restraint")},
+        "conclusion": conclusion,
+        "priority_fix": "把主体提到左侧三分位" if conclusion != "pass" else "",
+        "judge": "test-fixture",
+    }
+    if anonymous:
+        del result["judge"]
+    if incomplete:
+        del result["red_lines"]["CS"]
+    return result
+
+
+def register_critique(project: Path, image: Path, result: dict) -> tuple[int, str]:
+    file = project / "critique_tmp.json"
+    file.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
+    return run(project, "critique", "register", str(image), "--file", str(file))
 
 
 def main() -> int:
@@ -132,6 +158,30 @@ def main() -> int:
         code, out = run(project, "evidence", str(busy), "--surface", "mobile")
         check(code == 0, "第二份成品登记成功")
 
+        # 质量门：测过结构但没做质量审判 → 拒绝
+        code, out = run(project, "verdict", "--tech", "pass", "--aesthetic", "pass",
+                        "--reason", "差异行提前后视线落点正确，但状态色与品牌色对比不足，需再检查移动端")
+        check(code == 1 and "没有质量审判" in out, "测过结构但未做质量审判，拒绝签发（测过≠评过）")
+
+        # 审判登记的结构校验
+        code, out = register_critique(project, busy, make_critique(incomplete=True))
+        check(code == 1 and "缺红线" in out, "缺红线的审判被拒绝登记")
+        code, out = register_critique(project, busy, make_critique(fail_line="CM"))
+        check(code == 1 and "自相矛盾" in out, "红线 fail 却判 pass 的审判被拒绝登记")
+        code, out = register_critique(project, busy, make_critique(anonymous=True))
+        check(code == 1 and "匿名" in out, "匿名审判被拒绝登记")
+
+        # revise 审判挡住通过
+        code, out = register_critique(project, busy, make_critique(conclusion="revise"))
+        check(code == 0, "revise 审判可登记")
+        code, out = run(project, "verdict", "--tech", "pass", "--aesthetic", "pass",
+                        "--reason", "差异行提前后视线落点正确，但状态色与品牌色对比不足，需再检查移动端")
+        check(code == 1 and "revise" in out, "最新成品审判为 revise 时拒绝签通过")
+
+        # pass 审判放行
+        code, out = register_critique(project, busy, make_critique(conclusion="pass"))
+        check(code == 0 and "pass" in out, "pass 审判登记成功")
+
         code, calm_out = run(project, "measure", str(calm))
         code, busy_out = run(project, "measure", str(busy))
         calm_flat, busy_flat = grab(calm_out, "flat_area"), grab(busy_out, "flat_area")
@@ -141,7 +191,6 @@ def main() -> int:
 
         code, out = run(project, "measure", str(busy), "--compare", str(busy))
         check("疑似只换皮" in out, "同一张图自比被判定为只换皮")
-
         code, out = run(project, "measure", str(busy), "--compare", str(calm))
         check("画面确有变化" in out, "两张不同图被判定为确有变化")
 
@@ -154,7 +203,7 @@ def main() -> int:
 
         code, out = run(project, "verdict", "--tech", "pass", "--aesthetic", "pass",
                         "--reason", "差异行提前后视线落点正确，但状态色与品牌色对比不足，需再检查移动端")
-        check(code == 0 and "审美状态：pass" in out, "条件齐备后签发出审美通过")
+        check(code == 0 and "审美状态：pass" in out, "条件齐备（含质量审判）后签发出审美通过")
 
         run(project, "reject", "--direction", "方向A-深色玻璃卡", "--mechanism", "只换了材质，层级与重力没变")
         code, out = run(project, "reject", "--direction", "方向B-编辑极简", "--mechanism", "间距收紧但仍靠装饰建立焦点")
@@ -164,24 +213,26 @@ def main() -> int:
                         "--reason", "这次真的不一样了，因为我把差异行提到了第一层，删掉了渐变光带")
         check(code == 1 and "新证据" in out, "两次被拒后没有新证据，拒绝签发")
 
-        # 提交一份与旧成品字节相同的「新方向」：时间算新证据，但指纹没变
         code, out = run(project, "evidence", str(copy_of_busy), "--surface", "desktop")
         check(code == 0, "同内容副本可以登记（登记层不做价值判断）")
         code, out = run(project, "verdict", "--tech", "pass", "--aesthetic", "pass",
                         "--reason", "这次真的不一样了，因为我把差异行提到了第一层，删掉了渐变光带")
         check(code == 1 and "换皮" in out, "指纹未变的新证据被判定为换皮并拒绝签发")
 
-        # 真正改变构图的成品才允许通过
         code, out = run(project, "evidence", str(calm2), "--surface", "desktop")
         check(code == 0, "真正改动后的成品登记成功")
+        register_critique(project, calm2, make_critique(conclusion="pass"))
         code, out = run(project, "verdict", "--tech", "pass", "--aesthetic", "pass",
                         "--reason", "主体转移到左侧三分位，留白结构改变，差异行的重力关系成立")
-        check(code == 0 and "审美状态：pass" in out, "画面确有变化后允许签发通过")
+        check(code == 0 and "审美状态：pass" in out, "画面确有变化且评过质量后允许签发通过")
+
+        # 迭代闭环
+        code, out = run(project, "loop", str(calm2), "--fix", "主体左移，留白结构改变")
+        check(code == 0 and "迭代轮次" in out, "loop 记录迭代轮次")
 
         code, out = run(project, "audit")
         check("审美审计" in out, "audit 可运行并给出报告")
 
-        # 伪造一次「零证据通过」，验证审计能抓出来
         state_file = project / ".aos" / "state.json"
         state = json.loads(state_file.read_text(encoding="utf-8"))
         state["verdicts"].append({"tech": "pass", "aesthetic": "pass",

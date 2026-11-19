@@ -35,6 +35,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import measure as vmeasure  # noqa: E402  （同目录模块）
+import critique as vcritique  # noqa: E402  （质量判据：真实视觉执行）
 
 CST = timezone(timedelta(hours=8))
 STATE_DIR = ".aos"
@@ -52,7 +53,7 @@ MIN_REASON_CHARS = 20
 # ---------- 基础设施 ----------
 
 def now() -> str:
-    return datetime.now(CST).isoformat(timespec="seconds")
+    return datetime.now(CST).isoformat(timespec="microseconds")
 
 
 def state_path(root: Path) -> Path:
@@ -427,6 +428,7 @@ def cmd_verdict(args: argparse.Namespace, root: Path) -> int:
         measured = [item for item in (state.get("evidence") or []) if item.get("measured")]
         if not measured:
             refusals.append("没有任何可测量的成品证据：画面未被测量，等于没看过")
+        refusals.extend(vcritique.critique_gate(state))
         rejections = state.get("rejections") or []
         all_evidence = state.get("evidence") or []
         if rejections and len(all_evidence) >= 2:
@@ -493,6 +495,19 @@ def cmd_status(args: argparse.Namespace, root: Path) -> int:
             f"最近指纹：留白 {m['flat_area']:.0%}｜边缘密度 {m['edge_density']:.0%}"
             f"｜色相族 {m['hue_families']}｜重心 ({m['centroid_x']:.2f}, {m['centroid_y']:.2f})"
         )
+    critiques = state.get("critiques") or []
+    if critiques:
+        last = critiques[-1]
+        ta = last.get("three_axis") or {}
+        print(
+            f"最近审判：{last['conclusion']}（judge: {last.get('judge')}）"
+            f"｜三轴 X{ta.get('x', 0):+d} Y{ta.get('y', 0):+d} Z{ta.get('z', 0):+d}"
+        )
+    else:
+        print("最近审判：尚未做质量审判（critique）")
+    rounds = state.get("rounds") or []
+    if rounds:
+        print(f"迭代轮次：{len(rounds)} 轮")
     return 0
 
 
@@ -533,6 +548,16 @@ def cmd_audit(args: argparse.Namespace, root: Path) -> int:
     if evidence and not measured:
         problems.append(f"{len(evidence)} 份成品全部未测量：没有可比较的形式指纹")
 
+    # 质量审判一致性：签了审美通过，最新成品却没有 pass 的审判
+    if evidence and any(v["aesthetic"] == "pass" for v in verdicts):
+        latest_critique = vcritique.critique_for_evidence(state, evidence[-1])
+        if latest_critique is None:
+            problems.append("签了审美通过，但最新成品没有质量审判（critique）：测过结构≠评过质量")
+        elif latest_critique.get("conclusion") != "pass":
+            problems.append(
+                f"签了审美通过，但最新成品审判结论是 {latest_critique.get('conclusion')}"
+            )
+
     # 换皮检测：最后一次被拒之后提交的成品，与之前几乎相同
     if rejections and len(evidence) >= 2:
         last_reject = rejections[-1]["at"]
@@ -549,7 +574,13 @@ def cmd_audit(args: argparse.Namespace, root: Path) -> int:
         if match and measured:
             target = int(match.group(1)) / 100
             actual = measured[-1]["metrics"]["flat_area"]
-            if abs(actual - target) > 0.15:
+            lower_bound = any(word in decision for word in ("不低于", "至少", "≥", "以上"))
+            if lower_bound:
+                if actual < target - 0.05:
+                    warnings.append(
+                        f"决策写「{decision}」，实测平坦区域 {actual:.0%}，低于下界 {target:.0%}"
+                    )
+            elif abs(actual - target) > 0.15:
                 warnings.append(
                     f"决策写「{decision}」，实测平坦区域 {actual:.0%}，差 {abs(actual - target):.0%}"
                 )
@@ -573,6 +604,56 @@ def cmd_audit(args: argparse.Namespace, root: Path) -> int:
 
 
 # ---------- 入口 ----------
+
+def cmd_critique(args: argparse.Namespace, root: Path) -> int:
+    argv = ["--root", str(root), args.action, args.image]
+    if args.taste:
+        argv += ["--taste", args.taste]
+    if args.action == "register":
+        if not args.file:
+            die("register 需要 --file 指向视觉审判结果 JSON。")
+        argv += ["--file", args.file]
+    if args.action == "prepare" and args.json_only:
+        argv += ["--json-only"]
+    return vcritique.main(argv)
+
+
+def cmd_loop(args: argparse.Namespace, root: Path) -> int:
+    state = require_state(root)
+    path = Path(args.image).expanduser()
+    if not path.is_file():
+        die(f"成品不存在：{args.image}。没渲染出来的东西不能算迭代。")
+    digest = sha256(path)
+    rounds = state.setdefault("rounds", [])
+    metrics = None
+    changed = None
+    try:
+        metrics = vmeasure.fingerprint(path)
+        if rounds and rounds[-1].get("metrics"):
+            same, _ = vmeasure.looks_like_repaint(rounds[-1]["metrics"], metrics)
+            changed = not same
+    except Exception:  # noqa: BLE001
+        pass
+    rounds.append({
+        "n": len(rounds) + 1, "path": str(path.resolve()), "sha256": digest,
+        "fix": (args.fix or "").strip(), "metrics": metrics,
+        "changed_from_prev": changed, "at": now(),
+    })
+    save(root, state)
+    print(f"✅ 迭代轮次 #{len(rounds)} 已记录：{path.name}")
+    if args.fix:
+        print(f"   本轮改动：{args.fix}")
+    if changed is False:
+        print("   ⛔ 与上一轮指纹几乎相同：这一轮没有真正改动（换皮）")
+    elif changed:
+        print("   画面确有变化")
+    critique = vcritique.critique_for_evidence(state, {"sha256": digest})
+    if critique:
+        print(f"   本轮质量审判：{critique['conclusion']}（judge: {critique.get('judge')}）")
+    else:
+        print("   本轮尚无质量审判：critique register 后才算评过质量")
+    return 0
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -629,6 +710,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     audit = sub.add_parser("audit", help="审计是否空过、空证据或只换皮")
     audit.set_defaults(func=cmd_audit)
+
+    critique_cmd = sub.add_parser("critique", help="质量审判：prepare 提示 / register 登记 / run 自动")
+    critique_cmd.add_argument("action", choices=("prepare", "register", "run"))
+    critique_cmd.add_argument("image")
+    critique_cmd.add_argument("--file", help="register 用：视觉审判结果 JSON")
+    critique_cmd.add_argument("--taste", help="品味锚点 JSON 路径")
+    critique_cmd.add_argument("--json-only", action="store_true", help="prepare 要求只输出 JSON")
+    critique_cmd.set_defaults(func=cmd_critique)
+
+    loop_cmd = sub.add_parser("loop", help="记录一轮生成→测量→审判迭代，并检测是否真改动")
+    loop_cmd.add_argument("image")
+    loop_cmd.add_argument("--fix", help="本轮相对上一轮改了什么机制")
+    loop_cmd.set_defaults(func=cmd_loop)
     return parser
 
 

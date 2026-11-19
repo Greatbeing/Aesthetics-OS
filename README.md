@@ -64,6 +64,29 @@ python scripts/aos.py measure 新方向.png --compare 旧方向.png  # 判是否
 
 `measure --compare` 不判美丑，只判结构变化：同图自比输出「疑似只换皮」，真正改动构图才输出「画面确有变化」。两次方向被拒后再交的新成品，如果指纹与之前几乎相同，`verdict` 会拒绝签发——红线 2 从「自觉不换皮」变成「数值抓住换皮」。
 
+## 质量会被审判，不只是测量
+
+形式指纹分得清“变没变”，分不清“变美还是变丑”：一张空洞的米色图和一张精妙的极简构图，`flat_area` 都≈0.99。所以还有一道独立的眼——**critique 判质量**。
+
+`scripts/critique.py` 把鉴赏家协议（6 红线 + 三轴坐标 + 5 反射 + 结论）交给**真实视觉**执行（agent 的 `vision_analyze`、Agnes 多模态、或人眼），它自己不“看”图，也绝不伪造审判：
+
+```bash
+python scripts/aos.py critique prepare 成品.png            # 生成结构化审判提示
+# → 用 vision_analyze 真的看画面，按提示产出结构化结果，存成 审判.json
+python scripts/aos.py critique register 成品.png --file 审判.json   # 校验并绑定像素哈希
+python scripts/aos.py critique run 成品.png                # 或用 Agnes 多模态自动审判（需 key）
+```
+
+`register` 逐项校验：6 红线各有证据、三轴是 -3..3 整数、5 反射各有看见的事实、结论合法、非 pass 必须给具体修改、必须声明 judge。**任何红线 fail 却判 pass、或匿名审判，直接拒绝登记。** 审判结果对照 `references/taste-profile.json` 的品味锚点（默认 X+2/Y+3/Z+1）给出偏离。
+
+`verdict --aesthetic pass` 现在要求最新成品有一份**绑定到该像素哈希、结论为 pass** 的审判——**测过结构≠评过质量**。`loop` 记录每一轮生成→测量→审判，并用指纹对比检测这一轮是否真改动：
+
+```bash
+python scripts/aos.py loop 成品-v2.png --fix "主体左移，留白提到 70%"
+```
+
+诚实声明：审判是视觉模型的判断，不是客观真值；它判得了构图/材质/克制/文化，判不了“市场会不会喜欢”。品味锚点是校准参照，不是美的定义，应由用户确认与修订。
+
 ---
 
 ## 三条红线
@@ -120,11 +143,15 @@ aesthetics-os/
 ├── modern-design-history.md              # 工业化 → 工艺美术 → 新艺术 → 维也纳与制造联盟
 ├── cross-cultural-design-aesthetics.md   # 文化模型 / 语言不是替换字符串 / 书写系统与阅读方向
 ├── agents/openai.yaml                    # 隐式调用声明
-├── scripts/aos.py                        # 系统调用：带状态、会拒绝的审美判断接口（含 measure）
+├── scripts/aos.py                        # 系统调用：带状态、会拒绝的审美判断接口（含 measure/critique/loop）
 ├── scripts/measure.py                    # 无参考形式指纹：留白/边缘/色相/重心等 13 项，--compare 判换皮
-├── scripts/test_aos.py                   # 核心回归测试（27 项断言，重点测拒绝路径与测量判别力）
+├── scripts/critique.py                   # 质量判据：鉴赏家协议提示/校验/绑定像素，真实视觉执行
+├── scripts/test_aos.py                   # 核心回归测试（35 项断言，重点测拒绝路径与测量/审判判别力）
 ├── scripts/lint_skill.py                 # 结构自检：四段式 / 路由覆盖 / 坏链 / 引号与换行
-└── scripts/verify_utf8.py                # 严格 UTF-8 / 无 BOM / 无乱码自检
+├── scripts/verify_utf8.py                # 严格 UTF-8 / 无 BOM / 无乱码自检
+└── references/
+    ├── critique-protocol.md              # 质量审判协议：6 红线 + 三轴 + 5 反射 + 结论 + 闭环位置
+    └── taste-profile.json                # 品味锚点（所有者已确认偏好，项目可覆盖）
 ```
 
 15 篇参考不等于要背术语。技能里写死了原则：**理论只有转化为观察反射、取舍顺序或红线，才进入行动**；默认体现判断，不展示术语。除两份协议外，每篇参考都以 `使用边界 → 直觉化规则 → 误用警报 → 操作转译` 收尾——最后那节必须写出可执行的判断句，写不出就不算写完。这条规则由 `scripts/lint_skill.py` 实际检查，不靠自觉。

@@ -21,18 +21,23 @@ triggers: [视觉审计, 审美验收, 重设计, 视觉批评, 模板化, 方�
 | 层 | 文件 | 作用 |
 |---|---|---|
 | 内核 | `KERNEL.md` | 常驻上下文，约 1100 字：判断反射、三条红线、接口、模块路由 |
-| 系统调用 | `scripts/aos.py` | 带状态、会拒绝：命题 / 简报 / 证据 / 检查点 / 结论 / 审计 |
-| 模块 | 15 篇参考 | 按需读一篇，不预加载 |
+| 系统调用 | `scripts/aos.py` | 带状态、会拒绝：命题 / 简报 / 证据 / 检查点 / 结论 / 审计 / 测量（measure）/ 质量审判（critique）/ 迭代（loop） |
+| 模块 | 15 篇参考 + 审判协议 | 按需读一篇，不预加载 |
 
 品味是**项目的记忆**，不是模型的记忆：状态写在被设计项目的 `.aos/state.json`，跨会话保留，下次接手先 `aos.py status` 接续，而不是重新开始。
 
 ```
-init → propose → brief(decide) → checkpoint → evidence → verdict → audit
-                                     ↑                    │
-                                     └──── 缺口就退回 ─────┘
+init → propose → brief(decide) → checkpoint → evidence → measure → critique → verdict → audit
+                                     ↑                              │           │
+                                     └────────── 缺口就退回 ─────────┴── loop ───┘
 ```
 
-`verdict --aesthetic pass` 是唯一能签发「通过」的出口，它会被脚本拒绝，除非证据齐备。**红线不靠自觉，靠接口。**
+`verdict --aesthetic pass` 是唯一能签发「通过」的出口，它会被脚本拒绝，除非证据齐备。两道独立的眼：
+
+- **measure 测结构**：`evidence` 登记成品即自动测量（`scripts/measure.py` 的 13 项无参考形式指纹：留白、边缘、色相、重心等），`verdict` 要求至少一份成品被测量过——**没测过，等于没看过**。
+- **critique 判质量**：`scripts/critique.py` 把鉴赏家协议（6 红线 + 三轴 + 5 反射 + 结论）交给**真实视觉**执行（vision_analyze / Agnes 多模态 / 人眼），结果绑定到成品像素哈希。`verdict` 要求最新成品有一份结论为 pass 的审判——**测过结构≠评过质量**。形式指纹分得清“变没变”，分不清“变美还是变丑”；后者必须真的看画面。
+
+`loop` 记录每一轮生成→测量→审判，并用指纹对比检测这一轮是否真改动（换皮会被标出）。**红线不靠自觉，靠接口。**
 
 ## 审美反射
 
@@ -56,9 +61,9 @@ init → propose → brief(decide) → checkpoint → evidence → verdict → a
 
 - 用户说“测试都通过了，直接宣布精致高级” → 只确认技术状态，审美保持暂定。
 - 用户说“不要分析，布局不变，只换字体颜色特效” → 两次被拒后停止换皮，重建证据与方向。
-- 用户说“要很有人工智能感” → 从任务、信任、信息密度和真实内容推导，不采用科技模板默认值。
+- 用户说“要很有人工智能感” → 从用途推导，不采用科技模板默认值。
 
-直觉校准示例：人工智能财务产品的错误反应是深色背景、蓝紫渐变、发光网格和玻璃卡片；正确反应是从财务核对所需的信任、密度与风险信号出发，用稳定层级、精确数据和可追溯证据表达高级感。
+直觉校准示例：人工智能财务产品的错误反应是深色背景、蓝紫渐变、发光网格、玻璃卡片；正确反应是从财务核对所需的信任、密度与风险信号出发，用稳定层级和精确数据表达高级感。
 
 ## 短循环
 
@@ -77,6 +82,7 @@ init → propose → brief(decide) → checkpoint → evidence → verdict → a
 
 - 视觉重要的网页或界面：完整阅读 [web-aesthetic-protocol.md](web-aesthetic-protocol.md)。
 - 复杂产品、多格式系统或最终品味验收：[product-aesthetic-os.md](product-aesthetic-os.md)。
+- 成品质量审判与生成→审判→迭代闭环：[references/critique-protocol.md](references/critique-protocol.md)，由 `scripts/critique.py` 执行；品味锚点在 [references/taste-profile.json](references/taste-profile.json)。
 - 演示文稿、仪表盘、数据密集界面、图像或视频生成：[product-aesthetic-os.md](product-aesthetic-os.md) 的产品类型启发，再按信息密度配 [typography-aesthetics.md](typography-aesthetics.md) 或 [perception-and-form.md](perception-and-form.md)。
 - 移动端、小程序与长流程：层级与点击区域看 [perception-and-form.md](perception-and-form.md)，状态、反馈与恢复看 [interaction-design-aesthetics.md](interaction-design-aesthetics.md)。
 - 审美判断、感知形式与审美范畴：[aesthetic-judgment-theories.md](aesthetic-judgment-theories.md)、[perception-and-form.md](perception-and-form.md)、[aesthetic-categories.md](aesthetic-categories.md)。
@@ -91,4 +97,5 @@ init → propose → brief(decide) → checkpoint → evidence → verdict → a
 - 参考篇是判断材料，不是引用来源展示；除用户要求考据，不把术语搬进交付物。
 - 技能路径显示为 `rN/...` 时先展开根目录映射，禁止把 `rN` 当成真实子目录。
 - Windows PowerShell 读本技能文件用 `Get-Content -Raw -Encoding utf8`。
-- 改动本技能后依次运行 [scripts/lint_skill.py](scripts/lint_skill.py) 与 [scripts/verify_utf8.py](scripts/verify_utf8.py)。
+- 改动本技能后依次运行 [scripts/lint_skill.py](scripts/lint_skill.py)、[scripts/verify_utf8.py](scripts/verify_utf8.py) 与 [scripts/test_aos.py](scripts/test_aos.py)（需 Pillow）。
+- **状态机断言失败，先对门再改代码**：checkpoint/verdict 失败时，先把 fixture 逐个对上门（证据 ≥2、宽度 ≥2、measured ≥1、最新成品有 pass 的 critique、理由 ≥20 字），再怀疑产品逻辑——测试图同宽会撞「覆盖两种宽度」、缺审判会撞「测过≠评过」，失败是正常拒绝，不是 bug。

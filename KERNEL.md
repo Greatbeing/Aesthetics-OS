@@ -29,20 +29,24 @@ aos.py init                                   # 建立项目审美状态
 aos.py propose "面向…完成…呈现…通过…"          # 宽泛词必须写成 高级=参数1+参数2
 aos.py decide "一个决策"                        # 3–5 条
 aos.py brief --purpose … --audience … --signature … --nongoal … --evidence 参考.png
-aos.py evidence 成品.png --surface desktop     # 登记真实成品（哈希 + 尺寸）
+aos.py evidence 成品.png --surface desktop     # 登记真实成品（哈希 + 尺寸 + 自动测量）
+aos.py critique prepare 成品.png               # 生成质量审判提示，交真实视觉执行
+aos.py critique register 成品.png --file 审判.json   # 登记视觉审判（绑定像素哈希）
+aos.py loop 成品.png --fix "本轮改了什么机制"   # 记录迭代，检测是否真改动
 aos.py reject --direction … --mechanism …      # 记录失败的形式机制
 aos.py checkpoint                              # 有缺口不许投完整实现预算
 aos.py verdict --tech pass|fail --aesthetic pass|hold|revise --reason …
-aos.py audit                                   # 抓零证据通过、空过、只换皮
+aos.py audit                                   # 抓零证据通过、空过、只换皮、未评质量
 ```
 
-`verdict --aesthetic pass` 会被拒绝，除非：命题合模板、简报完整、≥2 份真实成品、覆盖两种宽度、技术已 pass、两次被拒后出现新证据、理由 ≥20 字。
+`verdict --aesthetic pass` 会被拒绝，除非：命题合模板、简报完整、≥2 份真实成品、覆盖两种宽度、至少一份被测量、最新成品有结论 pass 的质量审判、技术已 pass、两次被拒后出现新证据、理由 ≥20 字。**measure 测结构，critique 判质量；测过≠评过。**
 
 ## 模块
 
 要读时读一篇，不预加载。
 
 - 网页与界面 → `web-aesthetic-protocol.md`
+- 成品质量审判与迭代闭环 → `references/critique-protocol.md`（品味锚点 `references/taste-profile.json`）
 - 产品、多格式系统、演示文稿、仪表盘、图像与视频 → `product-aesthetic-os.md`
 - 排版 → `typography-aesthetics.md`｜感知与层级 → `perception-and-form.md`｜交互 → `interaction-design-aesthetics.md`
 - 文化与传统 → `chinese-painting-theory.md`、`chinese-aesthetics-beyond-painting.md`、`japanese-aesthetics-deep-dive.md`、`global-aesthetic-lenses.md`、`western-aesthetics.md`、`modern-design-history.md`
