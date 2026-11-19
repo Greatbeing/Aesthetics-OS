@@ -262,6 +262,73 @@ def render_pc(path: Path, out: Path, size: int = 384) -> Path:
     return out
 
 
+def _weight_centroid(path: Path, size: int = 384) -> tuple[float, float]:
+    """用 PC 结构图作视觉权重，算归一化重心 (0..1)。"""
+    pc = _pc_map(_load_gray(path, size))
+    w = pc + 1e-6
+    ys, xs = np.mgrid[0:size, 0:size]
+    cx = float((w * xs).sum() / w.sum()) / size
+    cy = float((w * ys).sum() / w.sum()) / size
+    return cx, cy
+
+
+def _phi_points() -> list[tuple[float, float]]:
+    return [(0.382, 0.382), (0.618, 0.382), (0.382, 0.618), (0.618, 0.618)]
+
+
+def spiral_analysis(path: Path) -> dict:
+    """黄金螺线/φ网格构图几何（参照，非裁决）。PC 权重重心 vs 黄金分割点。
+    偏心主体常贴黄金点；居中/对称合法。黄金螺线是西方启发式，水墨留白未必遵循。"""
+    cx, cy = _weight_centroid(path)
+    dists = [math.hypot(cx - px, cy - py) for px, py in _phi_points()]
+    nearest = min(dists)
+    center_dist = math.hypot(cx - 0.5, cy - 0.5)
+    if nearest < 0.12:
+        kind = "偏心主体（重心贴黄金分割点）"
+    elif center_dist < 0.10:
+        kind = "居中/对称（合法，非硬伤）"
+    else:
+        kind = "自由构图"
+    return {"centroid": [round(cx, 3), round(cy, 3)],
+            "nearest_phi_dist": round(nearest, 3),
+            "center_dist": round(center_dist, 3), "kind": kind,
+            "caveat": "黄金螺线是西方构图启发式；中国水墨计白当黑/留白未必遵循，低对齐≠差，须对照命题裁决"}
+
+
+def _spiral_polyline(W: int, H: int, eye: tuple[float, float],
+                     turns: float = 3.0, flip: int = 1) -> list[tuple[float, float]]:
+    ex, ey = eye[0] * W, eye[1] * H
+    th = np.linspace(0, turns * 2 * np.pi, 400)
+    r = np.exp(GOLDEN_B * th)
+    scale = min(W, H) * 0.62 / r.max()
+    x = ex + flip * r * scale * np.cos(th)
+    y = ey - r * scale * np.sin(th)
+    return list(zip(x, y))
+
+
+def render_spiral(path: Path, out: Path, size: int = 512) -> Path:
+    """黄金螺线 + φ网格 + PC权重重心叠加。螺线取最贴合重心的旋向。"""
+    img = Image.open(path).convert("RGB").resize((size, size))
+    dr = ImageDraw.Draw(img, "RGBA")
+    for f in (0.382, 0.618):
+        dr.line([(f * size, 0), (f * size, size)], fill=(90, 110, 150, 150), width=1)
+        dr.line([(0, f * size), (size, f * size)], fill=(90, 110, 150, 150), width=1)
+    cx, cy = _weight_centroid(path, size)
+    best = None
+    for eye in _phi_points():
+        for flip in (1, -1):
+            pts = _spiral_polyline(size, size, eye, 3.0, flip)
+            arr = np.array(pts)
+            d = float(np.min(np.hypot(arr[:, 0] - cx * size, arr[:, 1] - cy * size)))
+            if best is None or d < best[0]:
+                best = (d, pts)
+    dr.line(best[1], fill=(196, 30, 58, 220), width=2)
+    dr.ellipse([cx * size - 6, cy * size - 6, cx * size + 6, cy * size + 6],
+               fill=(0, 200, 255, 255))
+    img.save(out)
+    return out
+
+
 def render_hue_circle(path: Path, out: Path, size: int = 720) -> Path:
     """把图像色相画成单位圆上的相位向量 e^(iθ)——欧拉→色彩的可视化。"""
     info = hue_phases(path)
@@ -333,6 +400,9 @@ def main(argv: list[str] | None = None) -> int:
     pc_cmd.add_argument("--render", help="输出 PC 结构热图叠加路径")
     gb = sub.add_parser("gabor", help="Gabor 方向谱：纹理方向多样性（塑料感信号）")
     gb.add_argument("image")
+    sp = sub.add_parser("spiral", help="黄金螺线/φ网格构图几何（参照非裁决）")
+    sp.add_argument("image")
+    sp.add_argument("--render", help="输出螺线+φ网格+重心叠加路径")
     args = parser.parse_args(argv)
 
     if args.command == "palette":
@@ -362,6 +432,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"已渲染 PC 热图 {render_pc(path, Path(args.render))}")
     elif args.command == "gabor":
         print(json.dumps(gabor_orientation(path), ensure_ascii=False, indent=2))
+    elif args.command == "spiral":
+        print(json.dumps(spiral_analysis(path), ensure_ascii=False, indent=2))
+        if args.render:
+            print(f"已渲染螺线叠加 {render_spiral(path, Path(args.render))}")
     return 0
 
 

@@ -86,7 +86,7 @@ init → propose → brief(decide) → checkpoint → evidence → measure → c
 - 视觉重要的网页或界面：完整阅读 [web-aesthetic-protocol.md](web-aesthetic-protocol.md)。
 - 复杂产品、多格式系统或最终品味验收：[product-aesthetic-os.md](product-aesthetic-os.md)。
 - 成品质量审判与生成→审判→迭代闭环：[references/critique-protocol.md](references/critique-protocol.md)，由 `scripts/critique.py` 执行；品味锚点在 [references/taste-profile.json](references/taste-profile.json)。
-- 色彩和谐与纹理自然度的数学透镜（欧拉公式 e^(iθ) 迁移）：[references/euler-lens.md](references/euler-lens.md)，由 `scripts/euler_lens.py` 执行；色相=单位圆相位，调色板相位旋转指导生成 prompt；幅度谱 α 测纹理（留白会混淆须合看），傅里叶相位 pc 测结构、gabor 方向熵测材质自然度（塑料感硬证据）。
+- 色彩和谐与纹理自然度的数学透镜（欧拉公式 e^(iθ) 迁移）：[references/euler-lens.md](references/euler-lens.md)，由 `scripts/euler_lens.py` 执行；色相=单位圆相位，调色板相位旋转指导生成 prompt；幅度谱 α 测纹理（留白会混淆须合看），傅里叶相位 pc 测结构、gabor 方向熵测材质自然度（塑料感硬证据）、spiral 黄金螺线测构图几何（参照非裁决，含跨文化 caveat）。
 - 演示文稿、仪表盘、数据密集界面、图像或视频生成：[product-aesthetic-os.md](product-aesthetic-os.md) 的产品类型启发，再按信息密度配 [typography-aesthetics.md](typography-aesthetics.md) 或 [perception-and-form.md](perception-and-form.md)。
 - 移动端、小程序与长流程：层级与点击区域看 [perception-and-form.md](perception-and-form.md)，状态、反馈与恢复看 [interaction-design-aesthetics.md](interaction-design-aesthetics.md)。
 - 审美判断、感知形式与审美范畴：[aesthetic-judgment-theories.md](aesthetic-judgment-theories.md)、[perception-and-form.md](perception-and-form.md)、[aesthetic-categories.md](aesthetic-categories.md)。
@@ -102,4 +102,5 @@ init → propose → brief(decide) → checkpoint → evidence → measure → c
 - 技能路径显示为 `rN/...` 时先展开根目录映射，禁止把 `rN` 当成真实子目录。
 - Windows PowerShell 读本技能文件用 `Get-Content -Raw -Encoding utf8`。
 - 改动本技能后依次运行 [scripts/lint_skill.py](scripts/lint_skill.py)、[scripts/verify_utf8.py](scripts/verify_utf8.py) 与 [scripts/test_aos.py](scripts/test_aos.py)（需 Pillow）。
+- **patch 编辑 .md 后先归一换行再 lint**：Windows 上 patch 工具可能把 LF 写成 CRLF，本技能 lint 要求全 LF；提交前对改动文件做 `replace(b'\r\n', b'\n')`，否则 lint 报换行错误。
 - **状态机断言失败，先对门再改代码**：checkpoint/verdict 失败时，先把 fixture 逐个对上门（证据 ≥2、宽度 ≥2、measured ≥1、最新成品有 pass 的 critique、理由 ≥20 字），再怀疑产品逻辑——测试图同宽会撞「覆盖两种宽度」、缺审判会撞「测过≠评过」，失败是正常拒绝，不是 bug。

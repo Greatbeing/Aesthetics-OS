@@ -100,6 +100,19 @@ def main() -> int:
         g_grad = E.gabor_orientation(save(grad, d / "grad.png"))["orient_entropy"]
         check(g_noise > g_grad, f"噪声方向熵={g_noise:.2f} > 渐变={g_grad:.2f}（塑料渐变方向集中）")
 
+        # 黄金螺线：偏心主体贴黄金点 vs 居中（参照非裁决）
+        off = np.full((256, 256), 240, np.uint8)
+        off[150:180, 150:180] = 20   # 右下黄金点附近
+        sa = E.spiral_analysis(save(off, d / "off.png"))
+        check(sa["nearest_phi_dist"] < 0.12 and "偏心" in sa["kind"],
+              f"偏心主体贴黄金点 dist={sa['nearest_phi_dist']}")
+        cen = np.full((256, 256), 240, np.uint8)
+        cen[118:138, 118:138] = 20   # 中心
+        sc = E.spiral_analysis(save(cen, d / "cen.png"))
+        check(sc["center_dist"] < 0.10 and "居中" in sc["kind"],
+              f"居中构图合法 center_dist={sc['center_dist']}")
+        check("caveat" in sa and "西方" in sa["caveat"], "螺线分析含跨文化 caveat（低对齐≠差）")
+
     failed = [m for ok, m in results if not ok]
     print("\n" + "─" * 52)
     print(f"断言 {len(results) - len(failed)}/{len(results)} 通过")
