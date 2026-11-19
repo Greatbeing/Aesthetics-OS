@@ -1,10 +1,10 @@
-# aesthetics-OS
+# Aesthetics-OS
 
 > 让审美成为视觉选择**之前**的判断，而不是完成**之后**的装饰。
 
 **一个会拒绝的审美操作系统。** 它不出图、不写页面、不跑构建——它做两件执行 Skill 做不了的事：动手**之前**定方向，交付**之前**独立验收。不看实际成品，就不许说「好看」。
 
-[**首页 →**](https://greatbeing.github.io/aesthetics-os/) · [安装](#安装) · [三条红线](#三条红线) · [欧拉透镜](#欧拉透镜把数学变成美学信号) · [English](README.en.md)
+[**首页 →**](https://greatbeing.github.io/Aesthetics-OS/) · [安装](#安装) · [三条红线](#三条红线) · [欧拉透镜](#欧拉透镜把数学变成美学信号) · [English](README.en.md)
 
 `视觉审计` `审美验收` `重设计` `视觉批评` `模板化` `方向被否定` `技术正确但不好看` `无证据宣布通过`
 
@@ -20,7 +20,7 @@
 | **两次被拒，绝不换皮** | 「停。换字体、颜色、特效不算新方向。」先建立新证据和概念距离足够大的检查点。 |
 | **宽泛科技词，绝不套模板** | 「『人工智能感』推不出深色背景 + 青蓝渐变 + 发光网格。」从任务、信任、信息密度反推形式。 |
 
-说出来「使用 aesthetics-os」却违反任一红线，仍判定失败。**红线不靠自觉，靠接口。**
+说出来「使用 Aesthetics-OS」却违反任一红线，仍判定失败。**红线不靠自觉，靠接口。**
 
 ## 它不是顾问，是操作系统
 
@@ -144,7 +144,7 @@ python scripts/aos.py critique register 成品.png --file 审判.json   # 校验
 ## 结构
 
 ```
-aesthetics-os/
+Aesthetics-OS/
 ├── KERNEL.md                             # 常驻内核：反射 / 红线 / 接口 / 模块路由
 ├── SKILL.md                              # 主入口：分层 / 反射 / 红线 / 短循环 / 路由
 ├── web-aesthetic-protocol.md             # 网页与界面：顺序 + 三道门槛 + 借口纠正
@@ -184,7 +184,7 @@ aesthetics-os/
 
 ```bash
 # 通用：放进你的 Agent 技能目录
-git clone https://github.com/Greatbeing/aesthetics-os.git <skills-dir>/Aesthetics-OS
+git clone https://github.com/Greatbeing/Aesthetics-OS.git <skills-dir>/Aesthetics-OS
 ```
 
 Hermes Agent（Windows）默认技能目录 `%LOCALAPPDATA%\hermes\skills\`。安装后自检：
@@ -198,7 +198,7 @@ python scripts/test_euler_lens.py    # 欧拉透镜（需 numpy + Pillow）
 
 ## 和其他 Skill 的分工
 
-执行 Skill 负责生产与技术验证（出图、构建页面、跑测试）。aesthetics-OS 只负责审美直觉、系统一致性和独立审美门槛。所以它交出这样的句子，而不是交付物本身：
+执行 Skill 负责生产与技术验证（出图、构建页面、跑测试）。Aesthetics-OS 只负责审美直觉、系统一致性和独立审美门槛。所以它交出这样的句子，而不是交付物本身：
 
 ```
 命题：面向财务负责人完成月度对账时呈现可托付的克制，通过精确数字的层级差表达。

@@ -1,10 +1,10 @@
-# aesthetics-OS
+# Aesthetics-OS
 
 > Make aesthetics a judgment **before** the visual choice, not a decoration **after** the fact.
 
 **An aesthetic operating system that refuses.** It does not generate images, write pages, or run builds. It does two things execution skills cannot: set direction **before** the work, and independently accept **before** delivery. If it has not seen the actual artifact, it will not call it “good.”
 
-[**Homepage →**](https://greatbeing.github.io/aesthetics-os/en/) · [Install](#install) · [Three red lines](#three-red-lines) · [Euler lenses](#euler-lenses-math-as-aesthetic-signal) · [中文](README.md)
+[**Homepage →**](https://greatbeing.github.io/Aesthetics-OS/en/) · [Install](#install) · [Three red lines](#three-red-lines) · [Euler lenses](#euler-lenses-math-as-aesthetic-signal) · [中文](README.md)
 
 `visual audit` `aesthetic acceptance` `redesign` `visual critique` `templated` `direction rejected` `technically correct but ugly` `pass without evidence`
 
@@ -20,7 +20,7 @@ These are not suggestions. They are hard gates. Speed, obedience, user pressure,
 | **Two rejections, no reskinning** | “Stop. New fonts, colors, or effects are not a new direction.” Build new evidence and a checkpoint with real conceptual distance first. |
 | **Vague tech words, no templates** | “‘AI feel’ does not imply dark background + cyan gradient + glowing grid.” Derive form from the task, trust, and information density. |
 
-Saying “use aesthetics-os” while violating any red line still counts as failure. **The red lines run on interfaces, not on goodwill.**
+Saying “use Aesthetics-OS” while violating any red line still counts as failure. **The red lines run on interfaces, not on goodwill.**
 
 ## It is an operating system, not an advisor
 
@@ -59,7 +59,7 @@ init(propose/decide/brief) → design harmony(euler palette) → generate → me
 
 **Real case, “Lone Fisherman on a Cold River.”** Proposition: “the solitude of being pushed far away by heaven and earth.” Taste anchor X+2/Y+3/Z+1. The judge looks at the real pixels and **refuses to rubber-stamp three times** — the boat too dark and jumping forward, vector-sharp edges, plastic feel — until round four, when the boat truly dissolves into a misty ink shadow:
 
-![Four-round iteration loop](docs/assets/loop.jpg)
+![Four-round iteration loop](docs/en/assets/loop.jpg)
 
 | Round | Verdict | Real defect | Fingerprint |
 |---|---|---|---|
@@ -109,17 +109,17 @@ python scripts/aos.py critique register artifact.png --file judgment.json   # va
 
 **Hue is phase**: complementary = +π, triadic = ±2π/3. `palette 210 --scheme triadic` rotates by e^(iΔθ) to derive the harmonious set 210/330/90, written into the generation prompt. A split-complementary-guided dusk landscape measured dominant hues [35°,195°], R=0.354 complementary balance, and reads cinematic and refined on inspection.
 
-![Hue circle = unit circle](docs/assets/hue.jpg)
+![Hue circle = unit circle](docs/en/assets/hue.jpg)
 
 **Structure lives in phase, not amplitude**: swap the Fourier phase of two images and the reconstruction follows the phase donor (correlation 0.626 vs amplitude 0.218). Keep only phase and structure survives; keep only amplitude and it collapses.
 
-![Fourier phase vs amplitude](docs/assets/phase.jpg)
+![Fourier phase vs amplitude](docs/en/assets/phase.jpg)
 
 **Gabor orientation entropy is hard frequency-domain evidence for the “material realism” red line**: a smooth directional gradient (aurora) has orientation entropy 0.696 / anisotropy 0.574 → plastic; natural brushwork (A Thousand Li of Rivers and Mountains) has entropy 0.995 → natural material.
 
 **Golden spiral composition** (PC weight centroid vs φ golden points): the Bada lone bird’s centroid sits 0.022 from a golden point, the cold-river boat 0.020 (off-center subject); A Thousand Li is centered and judged “legal, not a defect.”
 
-![Golden spiral composition](docs/assets/spiral.jpg)
+![Golden spiral composition](docs/en/assets/spiral.jpg)
 
 > Honest boundaries: the amplitude spectrum and PC are confounded by composition (large whitespace dominates); they are structure descriptors, not naturalness verdicts. The golden spiral is a Western heuristic; Chinese ink “counting white as black” need not follow it, and low alignment ≠ bad. These signals raise the measurability of the floor; they do not create beauty. The verdict still belongs to critique. See [references/euler-lens.md](references/euler-lens.md).
 
@@ -145,7 +145,7 @@ Acceptance output has only six items: proposition, evidence, priority fix, memor
 
 ```bash
 # Universal: drop into your agent skills directory
-git clone https://github.com/Greatbeing/aesthetics-os.git <skills-dir>/Aesthetics-OS
+git clone https://github.com/Greatbeing/Aesthetics-OS.git <skills-dir>/Aesthetics-OS
 ```
 
 Hermes Agent (Windows) default skills directory is `%LOCALAPPDATA%\hermes\skills\`. After install, run the self-checks:
@@ -159,7 +159,7 @@ python scripts/test_euler_lens.py    # Euler lenses (needs numpy + Pillow)
 
 ## Division of labor with other skills
 
-Execution skills produce and verify technically (generate images, build pages, run tests). aesthetics-OS owns aesthetic intuition, system consistency, and the independent aesthetic gate. So it hands back sentences like these, not the deliverable itself:
+Execution skills produce and verify technically (generate images, build pages, run tests). Aesthetics-OS owns aesthetic intuition, system consistency, and the independent aesthetic gate. So it hands back sentences like these, not the deliverable itself:
 
 ```
 Proposition: for a finance lead reconciling monthly accounts, convey trustworthy restraint through the hierarchy of precise numbers.
