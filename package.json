@@ -1,0 +1,64 @@
+{
+  "name": "dsh-aesthetics-os",
+  "version": "0.1.0",
+  "description": "Aesthetics-OS for DeepSeek Harness: the refusal-capable aesthetic judgment skill plus 22 native tools — persistent propose→brief→evidence→measure→critique→verdict state machine, delivery gate, and the Euler five lenses. Python stdlib core; no network, no keys.",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "lib/",
+    "scripts/",
+    "references/",
+    "docs/assets/",
+    "agents/",
+    "SKILL.md",
+    "KERNEL.md",
+    "*.md",
+    "cordis.patch.yml",
+    "screenshots.json",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Greatbeing/Aesthetics-OS.git"
+  },
+  "homepage": "https://greatbeing.github.io/Aesthetics-OS/",
+  "bugs": {
+    "url": "https://github.com/Greatbeing/Aesthetics-OS/issues"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": ">=0.1.2-rc.1 <0.2.0 || >=0.2.0-rc.1 <0.2.1 || >=0.2.1-rc.1 <0.2.2 || >=0.2.2-rc.1 <0.3.0-0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "author": "Greatbeing",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "aesthetics",
+    "aesthetic-judgment",
+    "design-review",
+    "quality-gate",
+    "skill",
+    "euler-formula",
+    "visual-audit"
+  ]
+}

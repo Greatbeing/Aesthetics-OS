@@ -199,6 +199,7 @@ python scripts/verify_utf8.py .      # 编码
 python scripts/test_aos.py           # 核心拒绝路径（需 Pillow）
 python scripts/test_euler_lens.py    # 欧拉透镜（需 numpy + Pillow）
 python scripts/test_mcp_server.py    # MCP 端到端（需 mcp SDK）
+python scripts/test_dsh_bridge.py    # DSH 桥回归（仅标准库，25 断言）
 ```
 
 ## 和其他 Skill 的分工
@@ -223,6 +224,23 @@ python scripts/test_mcp_server.py    # MCP 端到端（需 mcp SDK）
 ```bash
 python scripts/test_mcp_server.py    # 真实 MCP 客户端 stdio 端到端，13 断言
 ```
+
+## DeepSeek Harness 插件
+
+本仓库同时是 DeepSeek Harness（DSH）原生插件 **`dsh-aesthetics-os`**：安装即注册 `aesthetics-os` 技能、一段系统提示路由（三条红线 + 交付门禁义务）与 **22 个原生工具**（15 个 `aos_*` 状态机/交付门禁/自检 + 7 个 `euler_*` 透镜）。工具经 `scripts/dsh_bridge.py` 复用与 MCP 服务器同一批被测函数，不重写判断逻辑；裁决类拒绝以结构化 `{ok:false}` 返回，agent 的工具循环必须处理。
+
+```bash
+# 一键安装（预构建包，免构建授权）
+dsh plugin --profile web add https://github.com/Greatbeing/Aesthetics-OS/releases/latest/download/dsh-aesthetics-os.tgz
+
+# 或从源码安装（无构建脚本，同样免授权）
+dsh plugin --profile web add github:Greatbeing/Aesthetics-OS
+```
+
+- 状态机工具只需 Python 3.9+ 标准库；欧拉透镜另需 `numpy + Pillow`，缺失时返回结构化降级错误，不影响其余工具；没有 Python 时技能判断层仍可用。
+- Python 不在 PATH：设环境变量 `AOS_PYTHON`，或在 profile 的 `cordis.patch.yml` 给插件行写 `config: { python: <路径> }`。
+- 项目状态默认写进会话工作目录的 `.aos/state.json`；工具可用 `project` 参数显式指定项目目录。
+- 已在 DSH 0.2.2-rc.5（Windows）实测：插件加载、skill 工具加载技能正文、`aos_probe` / `aos_status` 真实调用均通过。
 
 ## 诚实边界
 

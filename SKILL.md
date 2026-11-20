@@ -102,6 +102,6 @@ init → propose → brief(decide) → checkpoint → evidence → measure → c
 - 参考篇是判断材料，不是引用来源展示；除用户要求考据，不把术语搬进交付物。
 - 技能路径显示为 `rN/...` 时先展开根目录映射，禁止把 `rN` 当成真实子目录。
 - Windows PowerShell 读本技能文件用 `Get-Content -Raw -Encoding utf8`。
-- 改动本技能后依次运行 [scripts/lint_skill.py](scripts/lint_skill.py)、[scripts/verify_utf8.py](scripts/verify_utf8.py)、[scripts/test_aos.py](scripts/test_aos.py)（需 Pillow）、[scripts/test_euler_lens.py](scripts/test_euler_lens.py)（需 numpy）与 [scripts/test_mcp_server.py](scripts/test_mcp_server.py)（需 mcp SDK，真实 MCP 端到端）。
+- 改动本技能后依次运行 [scripts/lint_skill.py](scripts/lint_skill.py)、[scripts/verify_utf8.py](scripts/verify_utf8.py)、[scripts/test_aos.py](scripts/test_aos.py)（需 Pillow）、[scripts/test_euler_lens.py](scripts/test_euler_lens.py)（需 numpy）、[scripts/test_dsh_bridge.py](scripts/test_dsh_bridge.py)（仅标准库，DSH 桥协议）与 [scripts/test_mcp_server.py](scripts/test_mcp_server.py)（需 mcp SDK，真实 MCP 端到端）。
 - **patch 编辑 .md 后先归一换行再 lint**：Windows 上 patch 工具可能把 LF 写成 CRLF，本技能 lint 要求全 LF；提交前对改动文件做 `replace(b'\r\n', b'\n')`，否则 lint 报换行错误。
 - **状态机断言失败，先对门再改代码**：checkpoint/verdict 失败时，先把 fixture 逐个对上门（证据 ≥2、宽度 ≥2、measured ≥1、最新成品有 pass 的 critique、理由 ≥20 字），再怀疑产品逻辑——测试图同宽会撞「覆盖两种宽度」、缺审判会撞「测过≠评过」，失败是正常拒绝，不是 bug。

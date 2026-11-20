@@ -1,0 +1,21 @@
+# dsh-aesthetics-os bundle patch
+#
+# Single host row: registers the bundled `aesthetics-os` skill into the global
+# skill registry, adds one system-prompt routing section (three red lines +
+# delivery-gate obligation), and mounts 22 native tools backed by the bundled,
+# regression-tested Python state machine (scripts/dsh_bridge.py).
+#
+# Everything the skill needs (SKILL.md, KERNEL.md, 15 reference modules,
+# scripts/, references/taste-profile.json) ships inside this package at the
+# root — installing the bundle is the whole installation; nothing to copy
+# into ~/.dsh/skills.
+#
+# Optional config: python executable override when it is not on PATH:
+#   - insert:
+#       - id: aesthetics-os
+#         name: "dsh-aesthetics-os"
+#         config:
+#           python: "C:/Python312/python.exe"
+- insert:
+    - id: aesthetics-os
+      name: "dsh-aesthetics-os"

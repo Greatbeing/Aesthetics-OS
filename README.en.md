@@ -156,6 +156,7 @@ python scripts/verify_utf8.py .      # encoding
 python scripts/test_aos.py           # core refusal paths (needs Pillow)
 python scripts/test_euler_lens.py    # Euler lenses (needs numpy + Pillow)
 python scripts/test_mcp_server.py    # MCP end-to-end (needs mcp SDK)
+python scripts/test_dsh_bridge.py    # DSH bridge regression (stdlib only, 25 assertions)
 ```
 
 ## Division of labor with other skills
@@ -180,6 +181,23 @@ The delivery gate `aos_delivery_gate` (also `scripts/delivery_gate.py`) hardens 
 ```bash
 python scripts/test_mcp_server.py    # real MCP client over stdio, 13 assertions
 ```
+
+## DeepSeek Harness plugin
+
+This repository is also a native DeepSeek Harness (DSH) plugin, **`dsh-aesthetics-os`**. Installing it registers the `aesthetics-os` skill, one system-prompt routing section (the three red lines + the delivery-gate obligation), and **22 native tools** (15 `aos_*` state-machine / delivery-gate / probe tools + 7 `euler_*` lenses). The tools call `scripts/dsh_bridge.py`, which reuses the same regression-tested functions as the MCP server — no judgment logic is reimplemented; verdict refusals return structured `{ok:false}` that the agent's tool loop must handle.
+
+```bash
+# One-click install (prebuilt package, no build approval needed)
+dsh plugin --profile web add https://github.com/Greatbeing/Aesthetics-OS/releases/latest/download/dsh-aesthetics-os.tgz
+
+# Or from source (no build scripts, also no approval needed)
+dsh plugin --profile web add github:Greatbeing/Aesthetics-OS
+```
+
+- State-machine tools need only Python 3.9+ stdlib. The Euler lenses additionally need `numpy + Pillow`; when missing they return a structured degradation error without affecting the other tools. Without Python, the skill's judgment layer still works.
+- Python not on PATH: set `AOS_PYTHON`, or give the plugin row `config: { python: <path> }` in the profile's `cordis.patch.yml`.
+- Project state goes to `.aos/state.json` in the session working directory by default; tools accept an explicit `project` argument.
+- Verified on DSH 0.2.2-rc.5 (Windows): plugin load, skill-body loading via the `skill` tool, and real `aos_probe` / `aos_status` calls all pass.
 
 ## Honest boundaries
 
